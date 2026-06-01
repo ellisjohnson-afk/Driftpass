@@ -7,17 +7,17 @@
 -- Plans
 insert into public.plans (name, slug, price_aud_cents, credits_per_month, stripe_price_id, audience_type)
 values
-  ('Wanderer',  'wanderer',  2500, 60,  'price_placeholder_wanderer',  'backpacker'),
-  ('Explorer',  'explorer',  4900, 130, 'price_placeholder_explorer',  'backpacker'),
-  ('Nomad',     'nomad',     8900, 280, 'price_placeholder_nomad',     'digital_nomad'),
-  ('Van Lifer', 'van_lifer', 2900, 80,  'price_placeholder_van_lifer', 'van_lifer')
+  ('Wanderer',  'wanderer',  2000, 25,  'price_placeholder_wanderer',  'backpacker'),
+  ('Explorer',  'explorer',  3500, 42,  'price_placeholder_explorer',  'backpacker'),
+  ('Nomad',     'nomad',     5900, 70,  'price_placeholder_nomad',     'digital_nomad'),
+  ('Van Lifer', 'van_lifer', 2200, 25,  'price_placeholder_van_lifer', 'van_lifer')
 on conflict (slug) do nothing;
 
 -- Founding Partners — Airlie Beach (home town)
 insert into public.partners (name, slug, description, category, address, city, state, lat, lng, google_rating, is_active, is_verified, is_featured)
 values
   (
-    'Ailey Beach Fit',
+    'Airlie Beach Fit',
     'ailey-beach-fit',
     'Premium gym and fitness classes on the Airlie Beach strip. Yoga, HIIT, and strength training.',
     'gym_fitness',
@@ -71,7 +71,7 @@ values
 on conflict (slug) do nothing;
 
 -- Services for founding partners
--- Ailey Beach Fit
+-- Airlie Beach Fit
 with partner as (select id from public.partners where slug = 'ailey-beach-fit')
 insert into public.partner_services (partner_id, service_type, name, credit_cost, aud_payout_cents, max_daily_redemptions)
 select
@@ -98,8 +98,10 @@ select
   s.aud_payout_cents,
   s.max_daily
 from partner, (values
-  ('luggage_storage', 'Luggage Storage (per bag)', 5, 350, 30),
-  ('cafe_session',    'Café Work Session',         8, 600, 20)
+  ('luggage_storage', 'Luggage Storage (per day)', 4, 350, 30),
+  ('cafe_session',    'Café Work Session',         6, 600, 20),
+  ('shower',          'Shower Access',               5, 400, 40),
+  ('laundry',         'Laundry Load',                8, 600, 20)
 ) as s(service_type, name, credit_cost, aud_payout_cents, max_daily)
 on conflict (partner_id, service_type) do nothing;
 
@@ -114,8 +116,9 @@ select
   s.aud_payout_cents,
   s.max_daily
 from partner, (values
-  ('cafe_session', 'Nomad Work Session (WiFi + coffee)', 8, 600, 40),
-  ('water_fill',   'Van Water Tank Refill',              4, 350, 10)
+  ('cafe_session', 'Nomad Work Session (WiFi + coffee)', 6, 600, 40),
+  ('water_fill',   'Van Water Tank Refill',              4, 350, 10),
+  ('coworking',    'Co-working Half Day',               12, 900, 15)
 ) as s(service_type, name, credit_cost, aud_payout_cents, max_daily)
 on conflict (partner_id, service_type) do nothing;
 

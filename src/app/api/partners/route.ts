@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       lat,
       lng,
       radius_km: radius,
-      p_category: category ?? null,
+      p_category: category ?? undefined,
     })
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

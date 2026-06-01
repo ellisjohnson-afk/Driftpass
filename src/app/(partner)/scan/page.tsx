@@ -68,7 +68,7 @@ export default function ScanPage() {
       })
       const data = await res.json() as RedemptionResult & { error?: string }
       if (res.ok) {
-        setResult({ success: true, ...data })
+        setResult({ ...data, success: true })
         setPin('')
       } else {
         setResult({ success: false, error: data.error ?? 'Declined' })

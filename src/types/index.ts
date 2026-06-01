@@ -46,7 +46,7 @@ export interface Plan {
   stripe_price_id: string
   audience_type: TravellerType
   features: string[]
-  is_active: boolean
+  is_active?: boolean
   is_popular?: boolean
 }
 

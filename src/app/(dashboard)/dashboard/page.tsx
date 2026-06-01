@@ -86,7 +86,7 @@ export default async function DashboardPage() {
         {sub?.cancel_at_period_end && (
           <div className="mt-4 bg-yellow-900/20 border border-yellow-800 rounded-lg px-4 py-2 text-sm text-yellow-400">
             Your subscription will cancel on {formatDate(balance.period_end)}.{' '}
-            <Link href="/dashboard/account" className="underline">Reactivate</Link>
+            <Link href="/account" className="underline">Reactivate</Link>
           </div>
         )}
       </div>

@@ -6,11 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "lint": "next lint --dir src",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "db:types": "supabase gen types typescript --linked > src/types/database.types.ts",
     "db:push": "supabase db push",
-    "db:reset": "supabase db reset"
+    "db:reset": "supabase db reset",
+    "db:apply-005": "node scripts/apply-migration-005.mjs",
+    "stripe:verify": "node scripts/verify-stripe-prices.mjs",
+    "test:pin": "node scripts/test-pin-windows.mjs",
+    "test:e2e": "node scripts/e2e-checklist.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.2",

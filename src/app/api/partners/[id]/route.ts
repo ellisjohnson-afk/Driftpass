@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Database } from '@/types/database.types'
+
+type PartnerUpdate = Database['public']['Tables']['partners']['Update']
 
 // GET /api/partners/[id] — public
 export async function GET(
@@ -69,7 +72,7 @@ export async function PATCH(
   const adminClient = createAdminClient()
   const { data, error } = await adminClient
     .from('partners')
-    .update(updates)
+    .update(updates as PartnerUpdate)
     .eq('id', id)
     .select()
     .single()

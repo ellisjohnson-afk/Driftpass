@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { stripe } from '@/lib/stripe/config'
 
 // GET /api/flash — list active flash deals for authenticated subscribers
 export async function GET(_req: NextRequest) {
@@ -67,53 +66,3 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ data }, { status: 201 })
 }
 
-// POST /api/flash/[id]/book — book a flash deal
-// This is in a separate route file in a real Phase 3 build
-// Included here as a stub to show the pattern
-
-export async function bookFlashDeal(dealId: string, userId: string, customerId: string) {
-  const adminClient = createAdminClient()
-
-  // Claim a seat atomically
-  const { data: claimed } = await adminClient.rpc('claim_flash_seat', {
-    p_deal_id: dealId,
-  })
-
-  if (!claimed) {
-    throw new Error('No seats available or deal has expired')
-  }
-
-  // Get deal details for payment
-  const { data: deal } = await adminClient
-    .from('flash_deals')
-    .select('subscriber_price_aud_cents, title')
-    .eq('id', dealId)
-    .single()
-
-  if (!deal) {
-    throw new Error('Deal not found')
-  }
-
-  // Create payment intent for the flash booking
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: deal.subscriber_price_aud_cents,
-    currency: 'aud',
-    customer: customerId,
-    metadata: {
-      type: 'flash_booking',
-      dealId,
-      userId,
-    },
-    description: deal.title,
-  })
-
-  // Create booking record (pending payment)
-  await adminClient.from('flash_bookings').insert({
-    user_id: userId,
-    flash_deal_id: dealId,
-    stripe_payment_intent_id: paymentIntent.id,
-    status: 'pending',
-  })
-
-  return { clientSecret: paymentIntent.client_secret }
-}

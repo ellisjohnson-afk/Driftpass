@@ -53,7 +53,7 @@ export async function deductCredits(params: {
     p_subscription_id: params.subscriptionId,
     p_amount: params.amount,
     p_description: params.description,
-    p_redemption_id: params.redemptionId ?? null,
+    p_redemption_id: params.redemptionId ?? undefined,
   })
 
   if (error) {

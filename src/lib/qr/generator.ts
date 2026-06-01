@@ -8,8 +8,9 @@ import type { PassToken } from '@/types'
 // Partner scan page verifies the signature and TTL server-side.
 // ============================================================
 
-const SECRET = process.env.PIN_HMAC_SECRET
-if (!SECRET) throw new Error('PIN_HMAC_SECRET env var is required but not set')
+const SECRET: string = process.env.PIN_HMAC_SECRET ?? (() => {
+  throw new Error('PIN_HMAC_SECRET env var is required but not set')
+})()
 
 const TOKEN_TTL_MS = 30_000  // 30 seconds
 
@@ -106,8 +107,8 @@ export function pinExpiresInMs(): number {
 }
 
 export function verifyPassPIN(pin: string, userId: string, subscriptionId: string): boolean {
-  // Accept 3 windows (3 minutes) to handle compilation delays and slow networks
-  return [-2, -1, 0].some(offset =>
+  // Accept current window and previous window (2 windows total)
+  return [-1, 0].some(offset =>
     pin === pinForWindow(userId, subscriptionId, pinWindow(offset))
   )
 }

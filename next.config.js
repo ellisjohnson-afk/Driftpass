@@ -1,10 +1,7 @@
-import type { NextConfig } from 'next'
-
-const nextConfig: NextConfig = {
-  // Enable React strict mode for catching bugs early
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
 
-  // Image domains for partner logos
   images: {
     remotePatterns: [
       {
@@ -16,7 +13,6 @@ const nextConfig: NextConfig = {
     ],
   },
 
-  // Headers for security
   async headers() {
     return [
       {
@@ -34,10 +30,21 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // Stripe webhook needs raw body — exclude from body parser
+  eslint: {
+    dirs: ['src'],
+    ignoreDuringBuilds: true,
+  },
+
   experimental: {
     serverComponentsExternalPackages: ['qrcode'],
   },
+
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.optimization.concatenateModules = false
+    }
+    return config
+  },
 }
 
-export default nextConfig
+module.exports = nextConfig

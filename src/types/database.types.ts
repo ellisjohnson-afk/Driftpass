@@ -35,7 +35,19 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['plans']['Insert']>
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          price_aud_cents?: number
+          credits_per_month?: number
+          stripe_price_id?: string
+          audience_type?: string
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -66,7 +78,21 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['profiles']['Insert']>
+        Update: {
+          id?: string
+          full_name?: string | null
+          email?: string
+          avatar_url?: string | null
+          traveller_type?: string | null
+          push_token?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          is_partner_user?: boolean
+          is_admin?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -79,6 +105,7 @@ export interface Database {
           current_period_start: string
           current_period_end: string
           cancel_at_period_end: boolean
+          pin_shard: string | null
           created_at: string
           updated_at: string
         }
@@ -92,10 +119,40 @@ export interface Database {
           current_period_start: string
           current_period_end: string
           cancel_at_period_end?: boolean
+          pin_shard?: string | null
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['subscriptions']['Insert']>
+        Update: {
+          id?: string
+          user_id?: string
+          plan_id?: string
+          stripe_subscription_id?: string
+          stripe_customer_id?: string
+          status?: string
+          current_period_start?: string
+          current_period_end?: string
+          cancel_at_period_end?: boolean
+          pin_shard?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       credit_transactions: {
         Row: {
@@ -120,7 +177,18 @@ export interface Database {
           redemption_id?: string | null
           created_at?: string
         }
-        Update: never  // immutable ledger
+        Update: {
+          id?: string
+          user_id?: string
+          subscription_id?: string | null
+          type?: string
+          amount?: number
+          balance_after?: number
+          description?: string
+          redemption_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
       }
       partners: {
         Row: {
@@ -175,7 +243,33 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['partners']['Insert']>
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          category?: string
+          address?: string
+          city?: string
+          state?: string
+          country?: string
+          lat?: number | null
+          lng?: number | null
+          phone?: string | null
+          email?: string | null
+          website?: string | null
+          google_rating?: number | null
+          google_place_id?: string | null
+          stripe_connect_account_id?: string | null
+          logo_url?: string | null
+          is_active?: boolean
+          is_verified?: boolean
+          is_featured?: boolean
+          deleted_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       partner_services: {
         Row: {
@@ -202,7 +296,27 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['partner_services']['Insert']>
+        Update: {
+          id?: string
+          partner_id?: string
+          service_type?: string
+          name?: string
+          credit_cost?: number
+          aud_payout_cents?: number
+          max_daily_redemptions?: number | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_services_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       partner_users: {
         Row: {
@@ -219,7 +333,29 @@ export interface Database {
           role?: string
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['partner_users']['Insert']>
+        Update: {
+          id?: string
+          user_id?: string
+          partner_id?: string
+          role?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_users_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_users_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       redemptions: {
         Row: {
@@ -248,7 +384,42 @@ export interface Database {
           status?: string
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['redemptions']['Insert']>
+        Update: {
+          id?: string
+          user_id?: string
+          partner_id?: string
+          service_id?: string
+          subscription_id?: string
+          credits_used?: number
+          aud_paid_to_partner?: number
+          scanned_by_partner_user_id?: string | null
+          qr_token_used?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "redemptions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "partner_services"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "redemptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       flash_deals: {
         Row: {
@@ -281,7 +452,30 @@ export interface Database {
           is_active?: boolean
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['flash_deals']['Insert']>
+        Update: {
+          id?: string
+          partner_id?: string
+          title?: string
+          description?: string
+          original_price_aud_cents?: number
+          subscriber_price_aud_cents?: number
+          commission_rate?: number
+          total_seats?: number
+          seats_remaining?: number
+          available_from?: string
+          expires_at?: string
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flash_deals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       flash_bookings: {
         Row: {
@@ -300,7 +494,30 @@ export interface Database {
           status?: string
           booked_at?: string
         }
-        Update: Partial<Database['public']['Tables']['flash_bookings']['Insert']>
+        Update: {
+          id?: string
+          user_id?: string
+          flash_deal_id?: string
+          stripe_payment_intent_id?: string | null
+          status?: string
+          booked_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flash_bookings_flash_deal_id_fkey"
+            columns: ["flash_deal_id"]
+            isOneToOne: false
+            referencedRelation: "flash_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flash_bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       events: {
         Row: {
@@ -329,7 +546,28 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
-        Update: Partial<Database['public']['Tables']['events']['Insert']>
+        Update: {
+          id?: string
+          partner_id?: string
+          title?: string
+          description?: string | null
+          starts_at?: string
+          ends_at?: string
+          is_free?: boolean
+          credit_cost?: number
+          max_attendees?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          }
+        ]
       }
       credit_topups: {
         Row: {
@@ -348,7 +586,15 @@ export interface Database {
           stripe_payment_intent_id?: string | null
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['credit_topups']['Insert']>
+        Update: {
+          id?: string
+          user_id?: string
+          credits_purchased?: number
+          aud_charged_cents?: number
+          stripe_payment_intent_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
       }
       notification_logs: {
         Row: {
@@ -369,10 +615,21 @@ export interface Database {
           sent_at?: string
           opened_at?: string | null
         }
-        Update: Partial<Database['public']['Tables']['notification_logs']['Insert']>
+        Update: {
+          id?: string
+          user_id?: string | null
+          title?: string
+          body?: string
+          data?: Json | null
+          sent_at?: string
+          opened_at?: string | null
+        }
+        Relationships: []
       }
     }
-    Views: Record<string, never>
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
       get_credit_balance: {
         Args: { p_user_id: string }
@@ -385,6 +642,15 @@ export interface Database {
           p_amount: number
           p_description: string
           p_redemption_id?: string
+        }
+        Returns: number
+      }
+      add_topup_credits: {
+        Args: {
+          p_user_id: string
+          p_subscription_id: string
+          p_amount: number
+          p_topup_id: string
         }
         Returns: number
       }
@@ -423,10 +689,12 @@ export interface Database {
         Returns: boolean
       }
       is_admin: {
-        Args: Record<never, never>
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }
-    Enums: Record<string, never>
+    Enums: {
+      [_ in never]: never
+    }
   }
 }
