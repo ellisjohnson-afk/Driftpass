@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --drift-green: #00FF7F;
+  --drift-orange: #FF6B35;
+  --drift-dark: #0A0A0A;
+  --drift-grey: #1A1A1A;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--drift-dark);
+  color: white;
+  font-family: var(--font-inter, system-ui), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* QR code container */
+.qr-container canvas {
+  border-radius: 12px;
+}
+
+/* Credit bar animation */
+.credit-bar {
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Partner card hover */
+.partner-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.partner-card:hover {
+  transform: translateY(-2px);
+}
+
+/* Flash deal pulse */
+.flash-pulse {
+  animation: flashPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes flashPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
