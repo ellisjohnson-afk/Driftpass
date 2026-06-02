@@ -2,17 +2,19 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+
+const SIGN_IN_TIMEOUT_MS = 20_000
 
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get('next') ?? '/dashboard'
+  const callbackError = searchParams.get('error')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -20,16 +22,30 @@ function LoginForm() {
     setError(null)
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error) {
-      setError(error.message)
+    try {
+      const signIn = supabase.auth.signInWithPassword({ email, password })
+      const timeout = new Promise<{ error: { message: string } }>((resolve) => {
+        setTimeout(
+          () => resolve({ error: { message: 'Sign in timed out. Check your connection and try again.' } }),
+          SIGN_IN_TIMEOUT_MS
+        )
+      })
+
+      const { error: signInError } = await Promise.race([signIn, timeout])
+
+      if (signInError) {
+        setError(signInError.message)
+        setLoading(false)
+        return
+      }
+
+      // Full navigation ensures auth cookies are sent before middleware runs
+      window.location.assign(next)
+    } catch {
+      setError('Something went wrong. Please try again.')
       setLoading(false)
-      return
     }
-
-    router.push(next)
-    router.refresh()
   }
 
   return (
@@ -43,9 +59,9 @@ function LoginForm() {
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8">
           <h1 className="text-xl font-bold mb-6">Welcome back</h1>
 
-          {error && (
+          {(error || callbackError) && (
             <div className="bg-red-900/30 border border-red-800 text-red-400 rounded-lg px-4 py-3 text-sm mb-4">
-              {error}
+              {error ?? 'Sign in failed. Please try again.'}
             </div>
           )}
 
@@ -58,7 +74,8 @@ function LoginForm() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors"
+                disabled={loading}
+                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors disabled:opacity-60"
                 placeholder="you@email.com"
               />
             </div>
@@ -71,7 +88,8 @@ function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors"
+                disabled={loading}
+                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors disabled:opacity-60"
                 placeholder="••••••••"
               />
             </div>
@@ -79,9 +97,12 @@ function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#00FF7F] text-[#0A0A0A] py-3 rounded-lg font-bold hover:bg-[#00E070] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-[#00FF7F] text-[#0A0A0A] py-3 rounded-lg font-bold hover:bg-[#00E070] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading && (
+                <span className="w-4 h-4 border-2 border-[#0A0A0A] border-t-transparent rounded-full animate-spin" />
+              )}
+              {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 

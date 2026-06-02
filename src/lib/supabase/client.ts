@@ -1,10 +1,10 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createBrowserClient } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database.types'
 
-// Browser-side Supabase client. Use in Client Components only.
+// Browser client — must use @supabase/ssr so auth cookies sync with middleware + Server Components.
 export function createClient(): SupabaseClient<Database> {
-  return createSupabaseClient<Database>(
+  return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
