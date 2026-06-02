@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { canonicalAppUrl } from '@/lib/auth/canonical-url'
-import { resolveAuthNext } from '@/lib/auth/helpers'
+import { canonicalAppPath, canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { buildLoginReturnUrl, resolveAuthNext } from '@/lib/auth/helpers'
 
 // ============================================================
 // DriftPass Middleware
@@ -50,14 +50,20 @@ export async function middleware(request: NextRequest) {
       next: request.nextUrl.searchParams.get('next'),
       plan: request.nextUrl.searchParams.get('plan'),
     })
-    return NextResponse.redirect(canonicalAppUrl(destination))
+    console.log('[Middleware] logged-in auth-page redirect:', {
+      pathname,
+      rawNext: request.nextUrl.searchParams.get('next'),
+      rawPlan: request.nextUrl.searchParams.get('plan'),
+      destination,
+    })
+    return NextResponse.redirect(canonicalAppPath(destination))
   }
 
   // Guard dashboard routes — preserve path + query (e.g. /pricing?plan=explorer)
   if (PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!user) {
       const returnTo = pathname + search
-      return NextResponse.redirect(canonicalAppUrl('/login', { next: returnTo }))
+      return NextResponse.redirect(buildLoginReturnUrl(returnTo))
     }
   }
 
@@ -65,7 +71,7 @@ export async function middleware(request: NextRequest) {
   if (PARTNER_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!user) {
       const returnTo = pathname + search
-      return NextResponse.redirect(canonicalAppUrl('/login', { next: returnTo }))
+      return NextResponse.redirect(buildLoginReturnUrl(returnTo))
     }
 
     // Check partner_user record (lightweight check)

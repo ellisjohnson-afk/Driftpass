@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canonicalAppUrl } from '@/lib/auth/canonical-url'
-import { buildPricingCheckoutPath, sanitizePlanSlug } from '@/lib/auth/helpers'
+import { buildLoginReturnUrl, buildPricingCheckoutPath, sanitizePlanSlug } from '@/lib/auth/helpers'
 import PricingClient from './PricingClient'
 
 export const dynamic = 'force-dynamic'
@@ -16,7 +16,7 @@ export default async function PricingPage({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    redirect(canonicalAppUrl('/login', { next: buildPricingCheckoutPath(plan) }))
+    redirect(buildLoginReturnUrl(buildPricingCheckoutPath(plan)))
   }
 
   const admin = createAdminClient()

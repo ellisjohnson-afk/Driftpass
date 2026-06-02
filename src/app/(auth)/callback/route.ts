@@ -1,25 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { resolveAuthNext } from '@/lib/auth/helpers'
-import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import {
+  AUTH_POST_LOGIN_COOKIE,
+  readAuthPostLoginCookie,
+  resolveAuthNext,
+} from '@/lib/auth/helpers'
+import { canonicalAppPath, canonicalAppUrl } from '@/lib/auth/canonical-url'
 
 // Supabase OAuth callback + email confirmation links.
 // Session cookies must be written onto the redirect response (not cookieStore alone).
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
+  const { searchParams } = request.nextUrl
   const code = searchParams.get('code')
-  const next = resolveAuthNext({
-    next: searchParams.get('next'),
-    plan: searchParams.get('plan'),
+  const rawNext = searchParams.get('next')
+  const rawPlan = searchParams.get('plan')
+  const cookieDestination = readAuthPostLoginCookie(request.headers.get('cookie'))
+
+  let destination = resolveAuthNext({ next: rawNext, plan: rawPlan })
+  if (destination === '/account' && cookieDestination) {
+    destination = resolveAuthNext({ next: cookieDestination })
+  }
+
+  const finalRedirect = canonicalAppPath(destination)
+  console.log('[Auth callback]', {
+    rawNext,
+    rawPlan,
+    cookieDestination,
+    destination,
+    finalRedirect,
   })
 
   if (!code) {
     return NextResponse.redirect(
-      canonicalAppUrl('/login', { error: 'auth_callback_error', next })
+      canonicalAppUrl('/login', { error: 'auth_callback_error', next: rawNext ?? undefined, plan: rawPlan ?? undefined })
     )
   }
 
-  const response = NextResponse.redirect(canonicalAppUrl(next))
+  const response = NextResponse.redirect(finalRedirect)
+  response.cookies.set(AUTH_POST_LOGIN_COOKIE, '', { path: '/', maxAge: 0 })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,7 +61,7 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error('[Auth callback] exchangeCodeForSession failed:', error.message)
     return NextResponse.redirect(
-      canonicalAppUrl('/login', { error: 'auth_callback_error', next })
+      canonicalAppUrl('/login', { error: 'auth_callback_error', next: rawNext ?? undefined, plan: rawPlan ?? undefined })
     )
   }
 

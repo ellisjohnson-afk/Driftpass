@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { getOAuthCallbackUrl } from '@/lib/auth/helpers'
+import { getOAuthCallbackUrl, setAuthPostLoginCookie } from '@/lib/auth/helpers'
 
 type OAuthProvider = 'google'
 
@@ -19,11 +19,16 @@ export function OAuthButtons({ next = '/account', disabled = false }: OAuthButto
     setLoadingProvider(provider)
     setError(null)
 
+    setAuthPostLoginCookie(next)
+    const redirectTo = getOAuthCallbackUrl(next)
+    console.log('[OAuth] postAuthNext:', next)
+    console.log('[OAuth] redirectTo:', redirectTo)
+
     const supabase = createClient()
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: getOAuthCallbackUrl(next),
+        redirectTo,
       },
     })
 

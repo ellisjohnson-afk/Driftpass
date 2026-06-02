@@ -17,3 +17,8 @@ export function canonicalAppUrl(
   }
   return url.toString()
 }
+
+/** Redirect target that may include its own query string, e.g. /pricing?plan=explorer */
+export function canonicalAppPath(pathWithQuery: string): string {
+  return new URL(pathWithQuery.startsWith('/') ? pathWithQuery : `/${pathWithQuery}`, CANONICAL_APP_ORIGIN).toString()
+}

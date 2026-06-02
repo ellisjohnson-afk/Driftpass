@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, Suspense, useEffect } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -26,6 +26,13 @@ function LoginForm() {
     : next !== '/account'
       ? `/signup?next=${encodeURIComponent(next)}`
       : '/signup'
+
+  useEffect(() => {
+    console.log('[Login] resolved postAuthNext:', next, {
+      rawNext: searchParams.get('next'),
+      rawPlan: searchParams.get('plan'),
+    })
+  }, [next, plan, searchParams])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
