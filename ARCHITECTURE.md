@@ -293,6 +293,60 @@ LAYER 6 — Ops
 
 ---
 
+## Planned Layer Roadmap
+
+Product layers for post–Layer 1 development. These are **not** the same as the technical build layers above (Foundation → Database → Payments, etc.). Layer 2 here means the first **town launch** increment after the core pass foundation is stable.
+
+### Layer 2 — Town Launch Layer
+
+- Remove in-app map and replace with **Get Directions** buttons using Google Maps links.
+- Add **Subscription Sponsor Logos** to the pricing/subscription page.
+- Add **Essentials / Local FAQ** tab for traveller needs: water refill, wifi, coffee, showers, luggage storage, parking, van lifer basics.
+- Add **Welcome / Arrival Page** per town, starting with `/town/airlie-beach`.
+- Add **Tour Highlights** section to the Welcome Page.
+- Wire existing Flash Deals stub if already present, but do not expand scope.
+
+**Layer 2 design constraint:** Structure pages and data so Layer 3 can introduce `pass_type` and `credit_type` without rewriting redemption logic. Do not add new pass credit logic in Layer 2.
+
+### Layer 3 — Pass Variants + Partner Growth
+
+- Add **East Coast Gym Pass** as a separate pass type.
+- Support different credit types such as **general credits** and **gym visit credits**.
+- Add **partner dashboard controls** for business promotions.
+- Consider **push notifications** after user activity exists.
+
+### Layer 4 — Monetisation Expansion
+
+- Paid partner push notifications.
+- Featured placements.
+- Sponsored visibility.
+- Advanced partner analytics.
+
+### Architecture warnings
+
+- Do **not** build location permission yet unless approved.
+- Do **not** build a full map.
+- Do **not** add new pass credit logic in Layer 2.
+- Do **not** add OneSignal or push notifications in Layer 2.
+- Do **not** create new apps or duplicate project folders.
+- Design Layer 2 so Layer 3 can later support `pass_type` and `credit_type` without rewriting redemption logic.
+
+### Potential future schema
+
+Tables to consider when Layer 2–3 work begins (not required for Layer 1):
+
+| Table | Purpose |
+|-------|---------|
+| `towns` | Town metadata (slug, name, region, launch status) |
+| `town_events` or `weekly_schedule` | Recurring or one-off town events |
+| `town_highlights` | Tour highlights for welcome pages |
+| `sponsor_logos` | Subscription sponsor branding on pricing |
+| `essentials_items` | FAQ / essentials content per town |
+| `pass_types` | Distinct pass products (e.g. East Coast Gym Pass) |
+| `credit_types` | General vs gym-visit (or other) credit buckets |
+
+---
+
 ## Scaling Design Decisions
 
 **Credit system is an immutable ledger.** Never UPDATE a balance field — always INSERT a `credit_transaction` and read balance via a view. This gives you an audit trail, is race-condition-safe with DB transactions, and lets you replay history.
