@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
@@ -11,7 +12,10 @@ export default async function DashboardLayout({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
+  if (!user) {
+    const pathname = (await headers()).get('x-pathname') ?? '/account'
+    redirect(`/login?next=${encodeURIComponent(pathname)}`)
+  }
 
   const admin = createAdminClient()
   const { data: sub } = await admin

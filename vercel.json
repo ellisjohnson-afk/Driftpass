@@ -1,6 +1,14 @@
 {
   "framework": "nextjs",
   "regions": ["syd1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "driftpass.com.au" }],
+      "destination": "https://www.driftpass.com.au/:path*",
+      "permanent": true
+    }
+  ],
   "functions": {
     "src/app/api/stripe/webhook/route.ts": {
       "maxDuration": 30

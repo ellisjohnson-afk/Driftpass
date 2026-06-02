@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { stripe, STRIPE_PRICE_IDS } from '@/lib/stripe/config'
+import { getAppOrigin } from '@/lib/auth/app-origin'
 
 const CreateSubscriptionSchema = z.object({
   planSlug: z.enum(['wanderer', 'explorer', 'nomad', 'van_lifer']),
@@ -71,13 +72,16 @@ export async function POST(req: NextRequest) {
   }
 
   // Create Checkout session
+  // Use the browser origin so Stripe returns to the same host as the auth session (www vs apex).
+  const appOrigin = getAppOrigin(req)
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
     mode: 'subscription',
-    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/account?subscribed=true`,
-    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?canceled=true`,
+    success_url: `${appOrigin}/account?subscribed=true`,
+    cancel_url: `${appOrigin}/pricing?canceled=true`,
     metadata: {
       userId: user.id,
       planSlug,
