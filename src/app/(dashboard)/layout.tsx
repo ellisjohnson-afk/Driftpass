@@ -47,7 +47,7 @@ export default async function DashboardLayout({
 
       <nav className="border-b border-[#2A2A2A] sticky top-0 bg-[#0A0A0A]/95 backdrop-blur-sm z-40">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href={hasActivePass ? '/dashboard' : '/pricing'} className="font-display text-lg font-bold">
+          <Link href={hasActivePass ? '/dashboard' : '/account'} className="font-display text-lg font-bold">
             <span className="text-white">Drift</span>
             <span className="text-[#00FF7F]">Pass</span>
           </Link>
@@ -72,9 +72,15 @@ export default async function DashboardLayout({
 
       <nav className="fixed bottom-0 left-0 right-0 bg-[#1A1A1A] border-t border-[#2A2A2A] pb-safe">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-around">
-          <TabLink href={hasActivePass ? '/dashboard' : '/pricing'} icon="🏠" label={hasActivePass ? 'Home' : 'Plans'} />
-          <TabLink href="/pass" icon="🎫" label="Pass" />
           <TabLink href="/account" icon="👤" label="Account" />
+          {hasActivePass ? (
+            <>
+              <TabLink href="/pass" icon="🎫" label="Pass" />
+              <TabLink href="/dashboard" icon="🏠" label="Home" />
+            </>
+          ) : (
+            <TabLink href="/pricing" icon="✨" label="Get pass" />
+          )}
         </div>
       </nav>
 

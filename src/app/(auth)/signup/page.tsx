@@ -90,7 +90,7 @@ function SignupForm() {
             </div>
           )}
 
-          <OAuthButtons next="/pricing" disabled={loading} />
+          <OAuthButtons next="/account" disabled={loading} />
 
           <form onSubmit={(e) => { void handleSignup(e) }} className="space-y-4 mt-4">
             <div>

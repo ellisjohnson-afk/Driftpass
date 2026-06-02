@@ -15,7 +15,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
-  const next = sanitizeNextPath(searchParams.get('next'), '/pricing')
+  const next = sanitizeNextPath(searchParams.get('next'), '/account')
   const callbackError = searchParams.get('error')
 
   const handleLogin = async (e: React.FormEvent) => {

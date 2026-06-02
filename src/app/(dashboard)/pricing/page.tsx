@@ -18,7 +18,7 @@ export default async function PricingPage() {
     .eq('status', 'active')
     .maybeSingle()
 
-  if (sub) redirect('/dashboard')
+  if (sub) redirect('/account')
 
   return <PricingClient />
 }
