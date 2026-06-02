@@ -7,6 +7,12 @@
       "has": [{ "type": "host", "value": "driftpass.com.au" }],
       "destination": "https://www.driftpass.com.au/:path*",
       "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "driftpass.vercel.app" }],
+      "destination": "https://www.driftpass.com.au/:path*",
+      "permanent": true
     }
   ],
   "functions": {

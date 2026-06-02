@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { canonicalAppPath, canonicalAppUrl } from '@/lib/auth/canonical-url'
+import {
+  canonicalAppPath,
+  canonicalAppUrl,
+  isCanonicalProductionHost,
+  toCanonicalProductionUrl,
+} from '@/lib/auth/canonical-url'
 import { buildLoginReturnUrl, resolveAuthNext } from '@/lib/auth/helpers'
 
 // ============================================================
@@ -15,6 +20,15 @@ const AUTH_ROUTES = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
+  const host = request.headers.get('host') ?? ''
+
+  // OAuth PKCE state is host-bound — never serve auth on driftpass.vercel.app or apex.
+  if (!isCanonicalProductionHost(host)) {
+    const destination = toCanonicalProductionUrl(pathname, search)
+    console.log('[Middleware] non-canonical host redirect:', { host, destination })
+    return NextResponse.redirect(destination, 308)
+  }
+
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-pathname', pathname)
   let response = NextResponse.next({ request: { headers: requestHeaders } })

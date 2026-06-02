@@ -2,6 +2,14 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // Production client bundle must never bake in driftpass.vercel.app (OAuth PKCE is host-bound).
+  env: {
+    NEXT_PUBLIC_APP_URL:
+      process.env.VERCEL_ENV === 'production'
+        ? 'https://www.driftpass.com.au'
+        : process.env.NEXT_PUBLIC_APP_URL,
+  },
+
   images: {
     remotePatterns: [
       {

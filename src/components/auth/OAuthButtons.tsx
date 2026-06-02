@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getOAuthCallbackUrl, setAuthPostLoginCookie } from '@/lib/auth/helpers'
+import { CANONICAL_APP_ORIGIN } from '@/lib/auth/canonical-url'
 
 type OAuthProvider = 'google'
 
@@ -21,6 +22,7 @@ export function OAuthButtons({ next = '/account', disabled = false }: OAuthButto
 
     setAuthPostLoginCookie(next)
     const redirectTo = getOAuthCallbackUrl(next)
+    console.log('[OAuth] canonicalOrigin:', CANONICAL_APP_ORIGIN)
     console.log('[OAuth] postAuthNext:', next)
     console.log('[OAuth] redirectTo:', redirectTo)
 
