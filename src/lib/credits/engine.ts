@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { CreditBalance } from '@/types'
+import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 
 // ============================================================
 // DriftPass Credit Engine
@@ -20,7 +21,7 @@ export async function getCreditBalance(userId: string): Promise<CreditBalance> {
     .from('subscriptions')
     .select('id, current_period_end, plans(credits_per_month)')
     .eq('user_id', userId)
-    .eq('status', 'active')
+    .in('status', [...PASS_ACTIVE_STATUSES])
     .order('created_at', { ascending: false })
     .limit(1)
     .single()

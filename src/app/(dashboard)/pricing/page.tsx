@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 import { buildLoginReturnUrl, buildPricingCheckoutPath, sanitizePlanSlug } from '@/lib/auth/helpers'
+import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 import PricingClient from './PricingClient'
 
 export const dynamic = 'force-dynamic'
@@ -24,7 +25,7 @@ export default async function PricingPage({
     .from('subscriptions')
     .select('status')
     .eq('user_id', user.id)
-    .eq('status', 'active')
+    .in('status', [...PASS_ACTIVE_STATUSES])
     .maybeSingle()
 
   if (sub) redirect(canonicalAppUrl('/account'))

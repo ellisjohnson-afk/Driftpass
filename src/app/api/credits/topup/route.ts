@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { stripe, TOPUP_PACKAGES } from '@/lib/stripe/config'
+import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 
 const TopupSchema = z.object({
   packageIndex: z.number().int().min(0).max(2),
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
     .from('subscriptions')
     .select('id, stripe_customer_id')
     .eq('user_id', user.id)
-    .eq('status', 'active')
+    .in('status', [...PASS_ACTIVE_STATUSES])
     .single()
 
   if (!sub) {

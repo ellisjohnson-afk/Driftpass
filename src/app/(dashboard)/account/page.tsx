@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 import { formatDate, formatAUD } from '@/lib/utils/format'
 import { getCreditBalance } from '@/lib/credits/engine'
+import { isPassActive } from '@/lib/subscriptions/active-status'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -34,7 +35,7 @@ export default async function AccountPage({
     .maybeSingle()
 
   const plan = sub?.plans as { name?: string; price_aud_cents?: number; credits_per_month?: number } | null
-  const hasActivePass = sub?.status === 'active'
+  const hasActivePass = isPassActive(sub?.status)
   const balance = hasActivePass ? await getCreditBalance(user.id) : null
   const justSubscribed = searchParams.subscribed === 'true'
 

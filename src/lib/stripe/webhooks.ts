@@ -1,8 +1,17 @@
 import type Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { PLAN_BY_SLUG } from '@/constants/plans'
 import { sendWelcomeEmail, sendSubscriptionCanceledEmail } from '@/lib/email/resend'
 import { userPinShard } from '@/lib/qr/generator'
+import { stripe } from '@/lib/stripe/config'
+import {
+  ensureProfileExists,
+  getPlanRowBySlug,
+  normalizeSubscriptionStatus,
+  resolvePlanSlugForCheckout,
+  resolveUserIdFromStripe,
+  subscriptionHasInitialCredits,
+} from '@/lib/stripe/activation'
+import { PLAN_BY_SLUG } from '@/constants/plans'
 
 // ============================================================
 // Stripe Webhook Event Handlers
@@ -16,68 +25,115 @@ export async function handleCheckoutSessionCompleted(
   if (session.mode !== 'subscription') return
 
   const supabase = createAdminClient()
-  const userId = session.metadata?.userId
-  const planSlug = session.metadata?.planSlug
+  const userId = await resolveUserIdFromStripe(session)
+  const subscriptionId =
+    typeof session.subscription === 'string'
+      ? session.subscription
+      : session.subscription?.id
+  const customerId =
+    typeof session.customer === 'string' ? session.customer : session.customer?.id
 
-  if (!userId || !session.subscription || !session.customer) {
-    console.error('Webhook: missing metadata on checkout session', session.id)
-    return
+  if (!userId || !subscriptionId || !customerId) {
+    console.error('[Webhook] checkout.session.completed missing mapping', {
+      sessionId: session.id,
+      userId,
+      subscriptionId,
+      customerId,
+      metadata: session.metadata,
+    })
+    throw new Error('checkout.session.completed missing user/subscription/customer mapping')
   }
 
-  // Use planSlug from metadata — already validated at checkout creation
-  const plan = PLAN_BY_SLUG[planSlug ?? '']
+  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const planSlug = await resolvePlanSlugForCheckout(supabase, session, stripeSubscription)
 
-  if (!plan) {
-    console.error('Webhook: unknown planSlug in metadata', planSlug)
-    return
+  if (!planSlug) {
+    console.error('[Webhook] could not resolve plan from checkout session', {
+      sessionId: session.id,
+      metadata: session.metadata,
+      subMetadata: stripeSubscription.metadata,
+      priceId: stripeSubscription.items.data[0]?.price?.id,
+    })
+    throw new Error('checkout.session.completed unknown plan')
   }
 
-  // Get Stripe subscription details
-  const { stripe } = await import('@/lib/stripe/config')
-  const stripeSubscription = await stripe.subscriptions.retrieve(
-    session.subscription as string
-  )
+  const plan = PLAN_BY_SLUG[planSlug]
+  const planRow = await getPlanRowBySlug(supabase, planSlug)
+  if (!planRow) {
+    throw new Error(`checkout.session.completed plan row missing for slug ${planSlug}`)
+  }
 
-  // Get plan row from DB
-  const { data: planRow } = await supabase
-    .from('plans')
-    .select('id')
-    .eq('slug', plan.slug)
-    .single()
+  const profileOk = await ensureProfileExists(supabase, userId)
+  if (!profileOk) {
+    throw new Error(`checkout.session.completed profile missing for user ${userId}`)
+  }
 
-  if (!planRow) return
+  const periodStart = stripeSubscription.current_period_start
+  const periodEnd = stripeSubscription.current_period_end
+  const status = normalizeSubscriptionStatus(stripeSubscription.status)
 
-  // Upsert subscription record
-  const { data: sub } = await supabase
+  const { data: sub, error: subError } = await supabase
     .from('subscriptions')
-    .upsert({
-      user_id: userId,
-      plan_id: planRow.id,
-      stripe_subscription_id: stripeSubscription.id,
-      stripe_customer_id: session.customer as string,
-      status: stripeSubscription.status,
-      current_period_start: new Date(
-        (stripeSubscription.current_period_start ?? stripeSubscription.billing_cycle_anchor ?? 0) * 1000
-      ).toISOString(),
-      current_period_end: new Date(
-        (stripeSubscription.current_period_end ?? stripeSubscription.billing_cycle_anchor ?? 0) * 1000
-      ).toISOString(),
-      cancel_at_period_end: stripeSubscription.cancel_at_period_end,
-      pin_shard: userPinShard(userId),
-    }, { onConflict: 'stripe_subscription_id' })
-    .select()
+    .upsert(
+      {
+        user_id: userId,
+        plan_id: planRow.id,
+        stripe_subscription_id: stripeSubscription.id,
+        stripe_customer_id: customerId,
+        status,
+        current_period_start: new Date(
+          (periodStart ?? stripeSubscription.billing_cycle_anchor) * 1000
+        ).toISOString(),
+        current_period_end: new Date(
+          (periodEnd ?? stripeSubscription.billing_cycle_anchor) * 1000
+        ).toISOString(),
+        cancel_at_period_end: stripeSubscription.cancel_at_period_end,
+        pin_shard: userPinShard(userId),
+      },
+      { onConflict: 'stripe_subscription_id' }
+    )
+    .select('id, user_id, plan_id')
     .single()
 
-  if (!sub) return
+  if (subError || !sub) {
+    console.error('[Webhook] subscription upsert failed', {
+      sessionId: session.id,
+      userId,
+      planSlug,
+      error: subError?.message,
+    })
+    throw new Error(subError?.message ?? 'subscription upsert returned no row')
+  }
 
-  // Credit the monthly allowance
-  await supabase.rpc('credit_monthly_allowance', {
-    p_user_id: userId,
-    p_subscription_id: sub.id,
-    p_plan_id: planRow.id,
+  const alreadyCredited = await subscriptionHasInitialCredits(supabase, sub.id)
+  if (!alreadyCredited) {
+    const { error: creditError } = await supabase.rpc('credit_monthly_allowance', {
+      p_user_id: userId,
+      p_subscription_id: sub.id,
+      p_plan_id: planRow.id,
+    })
+
+    if (creditError) {
+      console.error('[Webhook] credit_monthly_allowance failed', {
+        sessionId: session.id,
+        userId,
+        subscriptionId: sub.id,
+        planSlug,
+        error: creditError.message,
+      })
+      throw new Error(`credit_monthly_allowance failed: ${creditError.message}`)
+    }
+  }
+
+  console.log('[Webhook] subscription activated', {
+    sessionId: session.id,
+    userId,
+    planSlug,
+    subscriptionId: sub.id,
+    status,
+    creditsGranted: !alreadyCredited,
   })
 
-  // Send welcome email
   const { data: profile } = await supabase
     .from('profiles')
     .select('email, full_name')
@@ -85,55 +141,60 @@ export async function handleCheckoutSessionCompleted(
     .single()
 
   if (profile) {
-    await sendWelcomeEmail({
-      to: profile.email,
-      name: profile.full_name ?? 'Drifter',
-      planName: plan.name,
-      credits: plan.credits_per_month,
-    })
+    try {
+      await sendWelcomeEmail({
+        to: profile.email,
+        name: profile.full_name ?? 'Drifter',
+        planName: plan.name,
+        credits: plan.credits_per_month,
+      })
+    } catch (emailError) {
+      console.warn('[Webhook] welcome email failed (non-fatal)', emailError)
+    }
   }
 }
 
 export async function handleInvoicePaid(invoice: Stripe.Invoice) {
   if (!invoice.subscription || !invoice.customer) return
 
+  // Initial credits are granted in checkout.session.completed
+  if (invoice.billing_reason === 'subscription_create') return
+
+  if (invoice.billing_reason !== 'subscription_cycle') return
+
   const supabase = createAdminClient()
 
-  // Find subscription in our DB
   const { data: sub } = await supabase
     .from('subscriptions')
     .select('id, user_id, plan_id')
     .eq('stripe_subscription_id', invoice.subscription as string)
     .single()
 
-  if (!sub) return
+  if (!sub) {
+    console.warn('[Webhook] invoice.paid renewal — subscription row not found', invoice.subscription)
+    return
+  }
 
-  // Update subscription period dates
-  const { stripe } = await import('@/lib/stripe/config')
   const stripeSub = await stripe.subscriptions.retrieve(invoice.subscription as string)
 
   await supabase
     .from('subscriptions')
     .update({
-      status: stripeSub.status,
+      status: normalizeSubscriptionStatus(stripeSub.status),
       current_period_start: new Date(stripeSub.current_period_start * 1000).toISOString(),
       current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
     })
     .eq('id', sub.id)
 
-  // Credit new month's allowance (only on renewal, not initial payment)
-  // Check if this is a renewal by seeing if there are existing transactions
-  const { count } = await supabase
-    .from('credit_transactions')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', sub.user_id)
+  const { error: creditError } = await supabase.rpc('credit_monthly_allowance', {
+    p_user_id: sub.user_id,
+    p_subscription_id: sub.id,
+    p_plan_id: sub.plan_id,
+  })
 
-  if (count && count > 0) {
-    await supabase.rpc('credit_monthly_allowance', {
-      p_user_id: sub.user_id,
-      p_subscription_id: sub.id,
-      p_plan_id: sub.plan_id,
-    })
+  if (creditError) {
+    console.error('[Webhook] renewal credit_monthly_allowance failed', creditError.message)
+    throw new Error(`renewal credit failed: ${creditError.message}`)
   }
 }
 
@@ -142,15 +203,20 @@ export async function handleSubscriptionUpdated(
 ) {
   const supabase = createAdminClient()
 
-  await supabase
+  const { error } = await supabase
     .from('subscriptions')
     .update({
-      status: subscription.status,
+      status: normalizeSubscriptionStatus(subscription.status),
       cancel_at_period_end: subscription.cancel_at_period_end,
       current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
       current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
     })
     .eq('stripe_subscription_id', subscription.id)
+
+  if (error) {
+    console.error('[Webhook] subscription.updated failed', subscription.id, error.message)
+    throw new Error(error.message)
+  }
 }
 
 export async function handleSubscriptionDeleted(
@@ -163,7 +229,6 @@ export async function handleSubscriptionDeleted(
     .update({ status: 'canceled' })
     .eq('stripe_subscription_id', subscription.id)
 
-  // Notify user
   const { data: sub } = await supabase
     .from('subscriptions')
     .select('user_id')
@@ -178,10 +243,14 @@ export async function handleSubscriptionDeleted(
       .single()
 
     if (profile) {
-      await sendSubscriptionCanceledEmail({
-        to: profile.email,
-        name: profile.full_name ?? 'Drifter',
-      })
+      try {
+        await sendSubscriptionCanceledEmail({
+          to: profile.email,
+          name: profile.full_name ?? 'Drifter',
+        })
+      } catch (emailError) {
+        console.warn('[Webhook] cancel email failed (non-fatal)', emailError)
+      }
     }
   }
 }

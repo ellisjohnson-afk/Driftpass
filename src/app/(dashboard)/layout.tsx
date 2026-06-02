@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 
 export default async function DashboardLayout({
@@ -23,7 +24,7 @@ export default async function DashboardLayout({
     .from('subscriptions')
     .select('status')
     .eq('user_id', user.id)
-    .eq('status', 'active')
+    .in('status', [...PASS_ACTIVE_STATUSES])
     .maybeSingle()
 
   const hasActivePass = Boolean(sub)

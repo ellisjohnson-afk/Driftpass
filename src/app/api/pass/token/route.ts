@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generatePassToken, generateQRDataURL, generatePassPIN, pinExpiresInMs } from '@/lib/qr/generator'
 import { getCreditBalance } from '@/lib/credits/engine'
+import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 
 // GET /api/pass/token — generate a fresh QR token for the subscriber's pass
 // Called every 25 seconds by the pass page client
@@ -20,7 +21,7 @@ export async function GET() {
     .from('subscriptions')
     .select('id, plans(name, credits_per_month)')
     .eq('user_id', user.id)
-    .eq('status', 'active')
+    .in('status', [...PASS_ACTIVE_STATUSES])
     .order('created_at', { ascending: false })
     .limit(1)
     .single()

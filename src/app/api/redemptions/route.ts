@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyPassToken, verifyPassPIN, InvalidTokenError, ExpiredTokenError } from '@/lib/qr/generator'
 import { deductCredits, InsufficientCreditsError } from '@/lib/credits/engine'
+import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 import { sendRedemptionConfirmationEmail } from '@/lib/email/resend'
 
 const PinRedemptionSchema = z.object({
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     const { data: subs } = await adminClient
       .from('subscriptions')
       .select('id, user_id')
-      .eq('status', 'active')
+      .in('status', [...PASS_ACTIVE_STATUSES])
       .eq('pin_shard', shard)
     const matched = subs?.find((s) => verifyPassPIN(pin, s.user_id, s.id))
     if (!matched) return NextResponse.json({ error: 'Invalid or expired PIN' }, { status: 401 })
@@ -89,7 +90,7 @@ async function processRedemption({ userId, subscriptionId, serviceId, service, a
 }) {
   const { data: subscription } = await adminClient
     .from('subscriptions').select('id, user_id')
-    .eq('id', subscriptionId).eq('user_id', userId).eq('status', 'active').single()
+    .eq('id', subscriptionId).eq('user_id', userId).in('status', [...PASS_ACTIVE_STATUSES]).single()
   if (!subscription) return NextResponse.json({ error: 'No active subscription' }, { status: 403 })
 
   // Period cap check

@@ -9,7 +9,6 @@ import {
 } from '@/lib/stripe/webhooks'
 
 // IMPORTANT: Stripe webhooks require the raw body — not parsed JSON.
-// Next.js App Router passes the raw request body correctly.
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const sig = req.headers.get('stripe-signature')
@@ -18,14 +17,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'No signature' }, { status: 400 })
   }
 
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('[Webhook] STRIPE_WEBHOOK_SECRET is not configured')
+    return NextResponse.json({ error: 'Webhook secret not configured' }, { status: 500 })
+  }
+
   let event: Stripe.Event
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    )
+    event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('[Webhook] Signature verification failed:', message)
@@ -53,19 +53,16 @@ export async function POST(req: NextRequest) {
         break
 
       case 'invoice.payment_failed':
-        // Log for monitoring — subscription status handled by subscription.updated
         console.warn('[Webhook] Payment failed for subscription:', event.data.object)
         break
 
       default:
-        // Unhandled event type — not an error, just log
         console.log('[Webhook] Unhandled event type:', event.type)
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    console.error('[Webhook] Handler error:', event.type, message)
-    // Return 200 anyway — prevents Stripe from retrying on business logic errors
-    // (only return 5xx for infrastructure failures)
+    console.error('[Webhook] Handler error:', event.type, event.id, message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 
   return NextResponse.json({ received: true })

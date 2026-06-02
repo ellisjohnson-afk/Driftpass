@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { getCreditBalance } from '@/lib/credits/engine'
 import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { isPassActive } from '@/lib/subscriptions/active-status'
 import { formatAUD, formatDate, creditPercentage } from '@/lib/utils/format'
 import type { Partner } from '@/types'
 
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
     .limit(1)
     .maybeSingle()
 
-  if (!sub || sub.status !== 'active') {
+  if (!sub || !isPassActive(sub.status)) {
     redirect(canonicalAppUrl('/pricing'))
   }
 

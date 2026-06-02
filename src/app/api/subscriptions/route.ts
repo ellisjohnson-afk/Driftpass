@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { stripe, STRIPE_PRICE_IDS } from '@/lib/stripe/config'
 import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 
 const CreateSubscriptionSchema = z.object({
   planSlug: z.enum(['wanderer', 'explorer', 'nomad', 'van_lifer']),
@@ -27,13 +28,23 @@ export async function POST(req: NextRequest) {
   const { planSlug } = parsed.data
   const priceId = STRIPE_PRICE_IDS[planSlug]
 
+  const { data: planRow } = await supabase
+    .from('plans')
+    .select('id')
+    .eq('slug', planSlug)
+    .single()
+
+  if (!planRow) {
+    return NextResponse.json({ error: 'Plan not configured in database' }, { status: 500 })
+  }
+
   // Check for existing active subscription
   const { data: existingSub } = await supabase
     .from('subscriptions')
     .select('status')
     .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+    .in('status', [...PASS_ACTIVE_STATUSES])
+    .maybeSingle()
 
   if (existingSub) {
     return NextResponse.json(
@@ -74,6 +85,7 @@ export async function POST(req: NextRequest) {
   // Always return to canonical host so auth cookies match the session.
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
+    client_reference_id: user.id,
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
     mode: 'subscription',
@@ -82,11 +94,13 @@ export async function POST(req: NextRequest) {
     metadata: {
       userId: user.id,
       planSlug,
+      planId: planRow.id,
     },
     subscription_data: {
       metadata: {
         userId: user.id,
         planSlug,
+        planId: planRow.id,
       },
     },
     allow_promotion_codes: true,
@@ -108,8 +122,8 @@ export async function DELETE(_req: NextRequest) {
     .from('subscriptions')
     .select('stripe_subscription_id')
     .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+    .in('status', [...PASS_ACTIVE_STATUSES])
+    .maybeSingle()
 
   if (!sub) {
     return NextResponse.json({ error: 'No active subscription' }, { status: 404 })
