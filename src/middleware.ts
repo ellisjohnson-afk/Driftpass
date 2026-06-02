@@ -8,7 +8,7 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 // ============================================================
 
 const PROTECTED_ROUTES = ['/dashboard', '/account', '/pass']
-const PARTNER_ROUTES = ['/portal']  // /scan is public (PIN-based, no login needed)
+const PARTNER_ROUTES: string[] = []  // /portal not yet built; /scan is public (PIN-based, no login needed)
 const AUTH_ROUTES = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {

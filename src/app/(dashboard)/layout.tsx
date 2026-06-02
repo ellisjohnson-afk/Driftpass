@@ -52,9 +52,8 @@ export default async function DashboardLayout({
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-around">
           <TabLink href="/dashboard" icon="🏠" label="Home" />
           <TabLink href="/pass" icon="🎫" label="Pass" />
-          <TabLink href="/flash" icon="⚡" label="Flash" />
-          <TabLink href="/map" icon="🗺️" label="Map" />
           <TabLink href="/account" icon="👤" label="Account" />
+          {/* Flash (Phase 3) and Map (Phase 4) hidden until those phases are built */}
         </div>
       </nav>
 
