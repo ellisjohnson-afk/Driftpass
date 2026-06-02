@@ -3,6 +3,7 @@ import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 
 export default async function DashboardLayout({
   children,
@@ -14,7 +15,7 @@ export default async function DashboardLayout({
 
   if (!user) {
     const pathname = (await headers()).get('x-pathname') ?? '/account'
-    redirect(`/login?next=${encodeURIComponent(pathname)}`)
+    redirect(canonicalAppUrl('/login', { next: pathname }))
   }
 
   const admin = createAdminClient()

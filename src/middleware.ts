@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { resolveAuthNext } from '@/lib/auth/helpers'
 
 // ============================================================
 // DriftPass Middleware
@@ -7,12 +9,12 @@ import { createServerClient, type CookieOptions } from '@supabase/ssr'
 // 2. Guards protected routes (dashboard, partner portal)
 // ============================================================
 
-const PROTECTED_ROUTES = ['/dashboard', '/account', '/pass']
+const PROTECTED_ROUTES = ['/dashboard', '/account', '/pass', '/pricing']
 const PARTNER_ROUTES: string[] = []  // /portal not yet built; /scan is public (PIN-based, no login needed)
 const AUTH_ROUTES = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-pathname', pathname)
   let response = NextResponse.next({ request: { headers: requestHeaders } })
@@ -42,24 +44,28 @@ export async function middleware(request: NextRequest) {
   // Refresh session — MUST be called before any other operation
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Redirect authenticated users away from auth pages
+  // Redirect authenticated users away from auth pages — preserve purchase intent
   if (user && AUTH_ROUTES.some((r) => pathname.startsWith(r))) {
-    return NextResponse.redirect(new URL('/account', request.url))
+    const destination = resolveAuthNext({
+      next: request.nextUrl.searchParams.get('next'),
+      plan: request.nextUrl.searchParams.get('plan'),
+    })
+    return NextResponse.redirect(canonicalAppUrl(destination))
   }
 
-  // Guard dashboard routes
+  // Guard dashboard routes — preserve path + query (e.g. /pricing?plan=explorer)
   if (PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!user) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('next', pathname)
-      return NextResponse.redirect(loginUrl)
+      const returnTo = pathname + search
+      return NextResponse.redirect(canonicalAppUrl('/login', { next: returnTo }))
     }
   }
 
   // Guard partner routes
   if (PARTNER_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url))
+      const returnTo = pathname + search
+      return NextResponse.redirect(canonicalAppUrl('/login', { next: returnTo }))
     }
 
     // Check partner_user record (lightweight check)
@@ -71,7 +77,7 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (!partnerUser) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
+      return NextResponse.redirect(canonicalAppUrl('/dashboard'))
     }
   }
 

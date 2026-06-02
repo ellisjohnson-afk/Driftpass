@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { getCreditBalance } from '@/lib/credits/engine'
+import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 import { formatAUD, formatDate, creditPercentage } from '@/lib/utils/format'
 import type { Partner } from '@/types'
 
@@ -11,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  if (!user) redirect(canonicalAppUrl('/login', { next: '/dashboard' }))
 
   // Subscription status — use admin client to bypass RLS
   const admin = createAdminClient()
@@ -24,7 +25,7 @@ export default async function DashboardPage() {
     .maybeSingle()
 
   if (!sub || sub.status !== 'active') {
-    redirect('/pricing')
+    redirect(canonicalAppUrl('/pricing'))
   }
 
   // Credit balance

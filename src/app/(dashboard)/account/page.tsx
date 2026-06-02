@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
+import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 import { formatDate, formatAUD } from '@/lib/utils/format'
 import { getCreditBalance } from '@/lib/credits/engine'
 import Link from 'next/link'
@@ -14,7 +15,7 @@ export default async function AccountPage({
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login?next=/account')
+  if (!user) redirect(canonicalAppUrl('/login', { next: '/account' }))
 
   const admin = createAdminClient()
 

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
-import { sanitizeNextPath, withTimeout } from '@/lib/auth/helpers'
+import { resolveAuthNext, withTimeout } from '@/lib/auth/helpers'
 
 const SIGN_IN_TIMEOUT_MS = 20_000
 
@@ -15,8 +15,17 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
-  const next = sanitizeNextPath(searchParams.get('next'), '/account')
+  const plan = searchParams.get('plan')
+  const next = resolveAuthNext({
+    next: searchParams.get('next'),
+    plan,
+  })
   const callbackError = searchParams.get('error')
+  const signupHref = plan
+    ? `/signup?next=/checkout&plan=${plan}`
+    : next !== '/account'
+      ? `/signup?next=${encodeURIComponent(next)}`
+      : '/signup'
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,7 +124,7 @@ function LoginForm() {
 
           <p className="text-center text-sm text-[#6B7280] mt-6">
             Don&apos;t have a pass?{' '}
-            <Link href="/signup" className="text-[#00FF7F] hover:underline">
+            <Link href={signupHref} className="text-[#00FF7F] hover:underline">
               Get started
             </Link>
           </p>

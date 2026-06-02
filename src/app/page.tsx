@@ -234,7 +234,7 @@ function Pricing() {
               </ul>
 
               <Link
-                href={`/signup?plan=${plan.slug}`}
+                href={`/login?next=/pricing&plan=${plan.slug}`}
                 className={`w-full text-center py-3 rounded-lg font-semibold text-sm transition-colors ${
                   plan.is_popular
                     ? 'bg-[#00FF7F] text-[#0A0A0A] hover:bg-[#00E070]'

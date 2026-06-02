@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
+import { resolveAuthNext, sanitizePlanSlug, buildPricingCheckoutPath } from '@/lib/auth/helpers'
 
 function SignupForm() {
   const [name, setName] = useState('')
@@ -15,7 +16,12 @@ function SignupForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const plan = searchParams.get('plan') ?? 'explorer'
+  const plan = sanitizePlanSlug(searchParams.get('plan')) ?? 'explorer'
+  const postAuthNext = resolveAuthNext({
+    next: searchParams.get('next'),
+    plan,
+  })
+  const loginHref = `/login?next=/pricing&plan=${plan}`
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,7 +66,7 @@ function SignupForm() {
     if (data.url) {
       window.location.href = data.url  // Stripe Checkout
     } else {
-      router.push('/dashboard')
+      router.push(buildPricingCheckoutPath(plan))
     }
   }
 
@@ -90,7 +96,7 @@ function SignupForm() {
             </div>
           )}
 
-          <OAuthButtons next="/account" disabled={loading} />
+          <OAuthButtons next={postAuthNext} disabled={loading} />
 
           <form onSubmit={(e) => { void handleSignup(e) }} className="space-y-4 mt-4">
             <div>
@@ -169,7 +175,7 @@ function SignupForm() {
 
           <p className="text-center text-sm text-[#6B7280] mt-4">
             Already have a pass?{' '}
-            <Link href="/login" className="text-[#00FF7F] hover:underline">
+            <Link href={loginHref} className="text-[#00FF7F] hover:underline">
               Sign in
             </Link>
           </p>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { stripe } from '@/lib/stripe/config'
+import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 
 // POST /api/stripe/portal — creates a Stripe customer portal session
 // Subscriber can manage their subscription, update card, cancel, etc.
@@ -27,7 +28,7 @@ export async function POST(_req: NextRequest) {
 
   const session = await stripe.billingPortal.sessions.create({
     customer: sub.stripe_customer_id,
-    return_url: `${process.env.NEXT_PUBLIC_APP_URL}/account`,
+    return_url: canonicalAppUrl('/account'),
   })
 
   return NextResponse.json({ url: session.url })

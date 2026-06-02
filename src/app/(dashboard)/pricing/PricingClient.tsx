@@ -1,10 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { PLANS } from '@/constants/plans'
+import { buildPricingCheckoutPath } from '@/lib/auth/helpers'
+import { canonicalAppUrl } from '@/lib/auth/canonical-url'
 
-export default function PricingClient() {
+type PricingClientProps = {
+  initialPlan?: string | null
+}
+
+export default function PricingClient({ initialPlan = null }: PricingClientProps) {
   const [loading, setLoading] = useState<string | null>(null)
+  const autoStarted = useRef(false)
 
   async function subscribe(planSlug: string) {
     setLoading(planSlug)
@@ -16,11 +23,13 @@ export default function PricingClient() {
       })
       const data = await res.json() as { url?: string; error?: string }
       if (res.status === 401) {
-        window.location.href = '/login?next=/pricing'
+        window.location.href = canonicalAppUrl('/login', {
+          next: buildPricingCheckoutPath(planSlug),
+        })
         return
       }
       if (res.status === 409) {
-        window.location.href = '/dashboard'
+        window.location.href = canonicalAppUrl('/account')
         return
       }
       if (data.url) {
@@ -34,6 +43,13 @@ export default function PricingClient() {
       setLoading(null)
     }
   }
+
+  useEffect(() => {
+    if (initialPlan && !autoStarted.current) {
+      autoStarted.current = true
+      void subscribe(initialPlan)
+    }
+  }, [initialPlan])
 
   return (
     <div className="px-2 py-4">
