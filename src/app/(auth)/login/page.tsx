@@ -4,6 +4,8 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { OAuthButtons } from '@/components/auth/OAuthButtons'
+import { sanitizeNextPath, withTimeout } from '@/lib/auth/helpers'
 
 const SIGN_IN_TIMEOUT_MS = 20_000
 
@@ -13,7 +15,7 @@ function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const searchParams = useSearchParams()
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = sanitizeNextPath(searchParams.get('next'))
   const callbackError = searchParams.get('error')
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -24,15 +26,11 @@ function LoginForm() {
     const supabase = createClient()
 
     try {
-      const signIn = supabase.auth.signInWithPassword({ email, password })
-      const timeout = new Promise<{ error: { message: string } }>((resolve) => {
-        setTimeout(
-          () => resolve({ error: { message: 'Sign in timed out. Check your connection and try again.' } }),
-          SIGN_IN_TIMEOUT_MS
-        )
-      })
-
-      const { error: signInError } = await Promise.race([signIn, timeout])
+      const { data, error: signInError } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        SIGN_IN_TIMEOUT_MS,
+        'Sign in timed out. Check your connection and try again.'
+      )
 
       if (signInError) {
         setError(signInError.message)
@@ -40,10 +38,17 @@ function LoginForm() {
         return
       }
 
-      // Full navigation ensures auth cookies are sent before middleware runs
+      if (!data.session) {
+        setError(
+          'Sign in completed but no session was created. If you just signed up, confirm your email first.'
+        )
+        setLoading(false)
+        return
+      }
+
       window.location.assign(next)
-    } catch {
-      setError('Something went wrong. Please try again.')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setLoading(false)
     }
   }
@@ -65,7 +70,9 @@ function LoginForm() {
             </div>
           )}
 
-          <form onSubmit={(e) => { void handleLogin(e) }} className="space-y-4">
+          <OAuthButtons next={next} disabled={loading} />
+
+          <form onSubmit={(e) => { void handleLogin(e) }} className="space-y-4 mt-4">
             <div>
               <label className="block text-sm text-[#9CA3AF] mb-1.5">Email</label>
               <input
@@ -102,7 +109,7 @@ function LoginForm() {
               {loading && (
                 <span className="w-4 h-4 border-2 border-[#0A0A0A] border-t-transparent rounded-full animate-spin" />
               )}
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? 'Signing in…' : 'Sign in with email'}
             </button>
           </form>
 

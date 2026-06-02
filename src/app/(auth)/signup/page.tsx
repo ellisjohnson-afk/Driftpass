@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { OAuthButtons } from '@/components/auth/OAuthButtons'
 
 function SignupForm() {
   const [name, setName] = useState('')
@@ -89,7 +90,9 @@ function SignupForm() {
             </div>
           )}
 
-          <form onSubmit={(e) => { void handleSignup(e) }} className="space-y-4">
+          <OAuthButtons next="/pricing" disabled={loading} />
+
+          <form onSubmit={(e) => { void handleSignup(e) }} className="space-y-4 mt-4">
             <div>
               <label className="block text-sm text-[#9CA3AF] mb-1.5">Your name</label>
               <input
@@ -155,7 +158,7 @@ function SignupForm() {
               disabled={loading}
               className="w-full bg-[#00FF7F] text-[#0A0A0A] py-3 rounded-lg font-bold hover:bg-[#00E070] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
-              {loading ? 'Setting up your pass...' : 'Continue to payment →'}
+              {loading ? 'Setting up your pass...' : 'Continue to payment with email →'}
             </button>
           </form>
 
