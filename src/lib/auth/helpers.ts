@@ -70,13 +70,9 @@ export function resolveAuthNext(params: {
   return '/account'
 }
 
-/** OAuth callback URL — never nest "?plan=" inside the `next` query param. */
-export function getOAuthCallbackUrl(postAuthDestination: string): string {
-  const { next, plan } = splitPostAuthDestination(postAuthDestination)
-  return canonicalAppUrl('/callback', {
-    next,
-    ...(plan ? { plan } : {}),
-  })
+/** Supabase Redirect URLs must match exactly — no query params on redirectTo. Post-auth path is stored in auth_post_login cookie. */
+export function getOAuthCallbackUrl(): string {
+  return canonicalAppUrl('/callback')
 }
 
 export function setAuthPostLoginCookie(destination: string): void {

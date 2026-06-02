@@ -22,6 +22,16 @@ export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const host = request.headers.get('host') ?? ''
 
+  // Supabase may fall back to Site URL — forward /?code=... to /callback?code=...
+  if (pathname === '/' && request.nextUrl.searchParams.has('code')) {
+    const callbackUrl = new URL('/callback', toCanonicalProductionUrl('', ''))
+    request.nextUrl.searchParams.forEach((value, key) => {
+      callbackUrl.searchParams.set(key, value)
+    })
+    console.log('[Middleware] forwarding Site URL OAuth code to callback:', callbackUrl.toString())
+    return NextResponse.redirect(callbackUrl.toString(), 307)
+  }
+
   // OAuth PKCE state is host-bound — never serve auth on driftpass.vercel.app or apex.
   if (!isCanonicalProductionHost(host)) {
     const destination = toCanonicalProductionUrl(pathname, search)

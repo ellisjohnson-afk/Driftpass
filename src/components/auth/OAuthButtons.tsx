@@ -21,9 +21,9 @@ export function OAuthButtons({ next = '/account', disabled = false }: OAuthButto
     setError(null)
 
     setAuthPostLoginCookie(next)
-    const redirectTo = getOAuthCallbackUrl(next)
+    const redirectTo = getOAuthCallbackUrl()
     console.log('[OAuth] canonicalOrigin:', CANONICAL_APP_ORIGIN)
-    console.log('[OAuth] postAuthNext:', next)
+    console.log('[OAuth] postAuthNext (cookie):', next)
     console.log('[OAuth] redirectTo:', redirectTo)
 
     const supabase = createClient()

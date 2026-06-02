@@ -16,10 +16,9 @@ export async function GET(request: NextRequest) {
   const rawPlan = searchParams.get('plan')
   const cookieDestination = readAuthPostLoginCookie(request.headers.get('cookie'))
 
-  let destination = resolveAuthNext({ next: rawNext, plan: rawPlan })
-  if (destination === '/account' && cookieDestination) {
-    destination = resolveAuthNext({ next: cookieDestination })
-  }
+  let destination = cookieDestination
+    ? resolveAuthNext({ next: cookieDestination })
+    : resolveAuthNext({ next: rawNext, plan: rawPlan })
 
   const finalRedirect = canonicalAppPath(destination)
   console.log('[Auth callback]', {
