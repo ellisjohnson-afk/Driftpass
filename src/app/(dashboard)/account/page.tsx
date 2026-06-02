@@ -73,7 +73,7 @@ export default async function AccountPage() {
         <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-5 text-center">
           <p className="text-[#9CA3AF] mb-4">No active subscription</p>
           <Link
-            href="/#pricing"
+            href="/pricing"
             className="bg-[#00FF7F] text-[#0A0A0A] px-6 py-2 rounded-lg font-bold text-sm hover:bg-[#00E070] transition-colors"
           >
             Get a Pass

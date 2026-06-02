@@ -8,13 +8,14 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = sanitizeNextPath(searchParams.get('next'))
-  const redirectOrigin = process.env.NEXT_PUBLIC_APP_URL ?? origin
+  // Stay on the same host the user signed in from (www vs apex) so session cookies apply.
+  const redirectOrigin = origin
 
   if (!code) {
     return NextResponse.redirect(`${redirectOrigin}/login?error=auth_callback_error`)
   }
 
-  const response = NextResponse.redirect(`${redirectOrigin}${next}`)
+  const response = NextResponse.redirect(new URL(next, redirectOrigin))
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 
 export default async function DashboardLayout({
@@ -12,6 +13,16 @@ export default async function DashboardLayout({
 
   if (!user) redirect('/login')
 
+  const admin = createAdminClient()
+  const { data: sub } = await admin
+    .from('subscriptions')
+    .select('status')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .maybeSingle()
+
+  const hasActivePass = Boolean(sub)
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name')
@@ -20,10 +31,23 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Top nav */}
+      {!hasActivePass && (
+        <div className="bg-[#00FF7F]/10 border-b border-[#00FF7F]/30 px-4 py-3">
+          <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+            <p className="text-sm text-[#00FF7F]">Activate your pass to get credits and your PIN.</p>
+            <Link
+              href="/pricing"
+              className="shrink-0 bg-[#00FF7F] text-[#0A0A0A] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#00E070] transition-colors"
+            >
+              Choose a plan
+            </Link>
+          </div>
+        </div>
+      )}
+
       <nav className="border-b border-[#2A2A2A] sticky top-0 bg-[#0A0A0A]/95 backdrop-blur-sm z-40">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/dashboard" className="font-display text-lg font-bold">
+          <Link href={hasActivePass ? '/dashboard' : '/pricing'} className="font-display text-lg font-bold">
             <span className="text-white">Drift</span>
             <span className="text-[#00FF7F]">Pass</span>
           </Link>
@@ -42,22 +66,18 @@ export default async function DashboardLayout({
         </div>
       </nav>
 
-      {/* Page content */}
       <main className="max-w-2xl mx-auto px-4 py-6">
         {children}
       </main>
 
-      {/* Bottom tab bar (mobile) */}
       <nav className="fixed bottom-0 left-0 right-0 bg-[#1A1A1A] border-t border-[#2A2A2A] pb-safe">
         <div className="max-w-2xl mx-auto px-4 h-16 flex items-center justify-around">
-          <TabLink href="/dashboard" icon="🏠" label="Home" />
+          <TabLink href={hasActivePass ? '/dashboard' : '/pricing'} icon="🏠" label={hasActivePass ? 'Home' : 'Plans'} />
           <TabLink href="/pass" icon="🎫" label="Pass" />
           <TabLink href="/account" icon="👤" label="Account" />
-          {/* Flash (Phase 3) and Map (Phase 4) hidden until those phases are built */}
         </div>
       </nav>
 
-      {/* Spacer for bottom nav */}
       <div className="h-16" />
     </div>
   )
