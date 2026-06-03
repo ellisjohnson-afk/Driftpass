@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { PLAN_BY_SLUG, getPlanByPriceId } from '@/constants/plans'
 import { STRIPE_PRICE_IDS, stripe } from '@/lib/stripe/config'
 import type { Database } from '@/types/database.types'
+import type { Plan } from '@/types'
 
 type AdminClient = SupabaseClient<Database>
 
@@ -121,6 +122,14 @@ export async function ensureProfileExists(
   return true
 }
 
+export function requirePlanDefinitionBySlug(slug: string): Plan {
+  const plan = PLAN_BY_SLUG[slug]
+  if (!plan) {
+    throw new Error(`Unable to resolve plan for subscription activation: ${slug}`)
+  }
+  return plan
+}
+
 export async function getPlanRowBySlug(admin: AdminClient, slug: string) {
   const { data, error } = await admin
     .from('plans')
@@ -134,6 +143,14 @@ export async function getPlanRowBySlug(admin: AdminClient, slug: string) {
   }
 
   return data
+}
+
+export async function requirePlanRowBySlug(admin: AdminClient, slug: string) {
+  const planRow = await getPlanRowBySlug(admin, slug)
+  if (!planRow) {
+    throw new Error(`Unable to resolve plan row for subscription activation: ${slug}`)
+  }
+  return planRow
 }
 
 export async function subscriptionHasInitialCredits(

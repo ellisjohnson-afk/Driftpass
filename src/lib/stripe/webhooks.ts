@@ -5,13 +5,13 @@ import { userPinShard } from '@/lib/qr/generator'
 import { stripe } from '@/lib/stripe/config'
 import {
   ensureProfileExists,
-  getPlanRowBySlug,
   normalizeSubscriptionStatus,
+  requirePlanDefinitionBySlug,
+  requirePlanRowBySlug,
   resolvePlanSlugForCheckout,
   resolveUserIdFromStripe,
   subscriptionHasInitialCredits,
 } from '@/lib/stripe/activation'
-import { PLAN_BY_SLUG } from '@/constants/plans'
 
 // ============================================================
 // Stripe Webhook Event Handlers
@@ -54,22 +54,26 @@ export async function handleCheckoutSessionCompleted(
       subMetadata: stripeSubscription.metadata,
       priceId: stripeSubscription.items.data[0]?.price?.id,
     })
-    throw new Error('checkout.session.completed unknown plan')
+    throw new Error('Unable to resolve plan for subscription activation')
   }
 
-  const plan = PLAN_BY_SLUG[planSlug]
-  const planRow = await getPlanRowBySlug(supabase, planSlug)
-  if (!planRow) {
-    throw new Error(`checkout.session.completed plan row missing for slug ${planSlug}`)
-  }
+  const plan = requirePlanDefinitionBySlug(planSlug)
+  const planRow = await requirePlanRowBySlug(supabase, planSlug)
 
   const profileOk = await ensureProfileExists(supabase, userId)
   if (!profileOk) {
     throw new Error(`checkout.session.completed profile missing for user ${userId}`)
   }
 
-  const periodStart = stripeSubscription.current_period_start
-  const periodEnd = stripeSubscription.current_period_end
+  const periodStartUnix =
+    stripeSubscription.current_period_start ?? stripeSubscription.billing_cycle_anchor
+  const periodEndUnix =
+    stripeSubscription.current_period_end ?? stripeSubscription.billing_cycle_anchor
+
+  if (periodStartUnix == null || periodEndUnix == null) {
+    throw new Error('Unable to resolve subscription billing period for activation')
+  }
+
   const status = normalizeSubscriptionStatus(stripeSubscription.status)
 
   const { data: sub, error: subError } = await supabase
@@ -81,12 +85,8 @@ export async function handleCheckoutSessionCompleted(
         stripe_subscription_id: stripeSubscription.id,
         stripe_customer_id: customerId,
         status,
-        current_period_start: new Date(
-          (periodStart ?? stripeSubscription.billing_cycle_anchor) * 1000
-        ).toISOString(),
-        current_period_end: new Date(
-          (periodEnd ?? stripeSubscription.billing_cycle_anchor) * 1000
-        ).toISOString(),
+        current_period_start: new Date(periodStartUnix * 1000).toISOString(),
+        current_period_end: new Date(periodEndUnix * 1000).toISOString(),
         cancel_at_period_end: stripeSubscription.cancel_at_period_end,
         pin_shard: userPinShard(userId),
       },
