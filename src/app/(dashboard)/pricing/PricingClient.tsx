@@ -1,20 +1,45 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { PLANS } from '@/constants/plans'
+import Link from 'next/link'
+import { HowItWorksSteps, MembershipPricingCard } from '@/components/pricing'
+import { isLegacyPlanSlug } from '@/constants/plans'
 import { buildPricingCheckoutPath } from '@/lib/auth/helpers'
-import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { appUrlAt } from '@/lib/auth/canonical-url'
+import { getClientAppOrigin } from '@/lib/auth/app-origin'
 
 type PricingClientProps = {
+  /** Legacy ?plan= slug — auto-starts checkout without showing picker */
   initialPlan?: string | null
+  backHref?: string
+  isAuthenticated?: boolean
 }
 
-export default function PricingClient({ initialPlan = null }: PricingClientProps) {
-  const [loading, setLoading] = useState<string | null>(null)
+export default function PricingClient({
+  initialPlan = null,
+  backHref = '/dashboard',
+  isAuthenticated = true,
+}: PricingClientProps) {
+  const [loading, setLoading] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const autoStarted = useRef(false)
 
+  const checkoutSlug = initialPlan && isLegacyPlanSlug(initialPlan) ? initialPlan : 'membership'
+
+  function startMembership() {
+    if (!isAuthenticated) {
+      window.location.href = appUrlAt(getClientAppOrigin(), '/login', {
+        next: buildPricingCheckoutPath(checkoutSlug),
+        plan: checkoutSlug,
+      })
+      return
+    }
+    void subscribe(checkoutSlug)
+  }
+
   async function subscribe(planSlug: string) {
-    setLoading(planSlug)
+    setLoading(true)
+    setCheckoutError(null)
     try {
       const res = await fetch('/api/subscriptions', {
         method: 'POST',
@@ -22,92 +47,73 @@ export default function PricingClient({ initialPlan = null }: PricingClientProps
         body: JSON.stringify({ planSlug }),
       })
       const data = await res.json() as { url?: string; error?: string }
+
       if (res.status === 401) {
-        window.location.href = canonicalAppUrl('/login', {
+        window.location.href = appUrlAt(getClientAppOrigin(), '/login', {
           next: buildPricingCheckoutPath(planSlug),
+          plan: planSlug,
         })
         return
       }
       if (res.status === 409) {
-        window.location.href = canonicalAppUrl('/account')
+        window.location.href = appUrlAt(getClientAppOrigin(), '/account')
         return
       }
       if (data.url) {
         window.location.href = data.url
       } else {
-        alert(data.error ?? 'Something went wrong')
-        setLoading(null)
+        const message =
+          data.error === 'Plan not configured in database'
+            ? 'Membership plan could not be loaded. Run npm run db:apply-006, restart the dev server, and retry.'
+            : (data.error ?? 'Something went wrong')
+        setCheckoutError(message)
+        setLoading(false)
       }
     } catch {
-      alert('Something went wrong')
-      setLoading(null)
+      setCheckoutError('Something went wrong. Check the terminal and try again.')
+      setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (initialPlan && !autoStarted.current) {
+    if (initialPlan && isLegacyPlanSlug(initialPlan) && isAuthenticated && !autoStarted.current) {
       autoStarted.current = true
       void subscribe(initialPlan)
     }
-  }, [initialPlan])
+  }, [initialPlan, isAuthenticated])
 
   return (
-    <div className="px-2 py-4">
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold mb-2">Choose your pass</h1>
-        <p className="text-[#6B7280]">You&apos;re signed in — pick a plan to activate credits and your pass.</p>
-        <p className="text-[#6B7280] text-sm mt-1">Billed every 2 weeks. Cancel anytime.</p>
+    <div className="animate-fade-in space-y-8 pb-4">
+      <div className="flex items-center gap-3">
+        <Link
+          href={backHref}
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-drift-border bg-drift-navy-light text-drift-text-muted transition-colors hover:text-white"
+          aria-label="Go back"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </Link>
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-drift-text-muted">
+            Drift Pass
+          </p>
+          <h1 className="text-2xl font-bold">Membership</h1>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {PLANS.map((plan) => (
-          <div
-            key={plan.slug}
-            className={`relative bg-[#1A1A1A] border rounded-2xl p-6 flex flex-col ${
-              plan.is_popular ? 'border-[#00FF7F]' : 'border-[#2A2A2A]'
-            }`}
-          >
-            {plan.is_popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00FF7F] text-[#0A0A0A] text-xs font-bold px-3 py-1 rounded-full">
-                MOST POPULAR
-              </div>
-            )}
+      <HowItWorksSteps />
 
-            <h2 className="text-xl font-bold mb-1">{plan.name}</h2>
-            <div className="mb-4">
-              <span className="text-3xl font-bold">
-                A${(plan.price_aud_cents / 100).toFixed(0)}
-              </span>
-              <span className="text-[#6B7280] text-sm"> / 2 weeks</span>
-            </div>
+      {checkoutError && (
+        <div className="rounded-xl border border-red-800/50 bg-red-900/30 px-4 py-3 text-sm text-red-400">
+          {checkoutError}
+        </div>
+      )}
 
-            <div className="text-[#00FF7F] font-semibold text-sm mb-4">
-              {plan.credits_per_month} credits per period
-            </div>
-
-            <ul className="space-y-2 mb-6 flex-1">
-              {plan.features.slice(1).map((f) => (
-                <li key={f} className="text-sm text-[#9CA3AF] flex items-start gap-2">
-                  <span className="text-[#00FF7F] mt-0.5">✓</span>
-                  {f}
-                </li>
-              ))}
-            </ul>
-
-            <button
-              onClick={() => void subscribe(plan.slug)}
-              disabled={loading === plan.slug}
-              className={`w-full py-3 rounded-xl font-bold transition-colors disabled:opacity-50 ${
-                plan.is_popular
-                  ? 'bg-[#00FF7F] text-[#0A0A0A] hover:bg-[#00E070]'
-                  : 'border border-[#2A2A2A] text-white hover:border-[#00FF7F]'
-              }`}
-            >
-              {loading === plan.slug ? 'Loading...' : 'Get started →'}
-            </button>
-          </div>
-        ))}
-      </div>
+      <MembershipPricingCard
+        loading={loading}
+        onStart={startMembership}
+      />
     </div>
   )
 }

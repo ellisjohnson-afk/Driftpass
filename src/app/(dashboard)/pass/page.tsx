@@ -10,7 +10,6 @@ type PassPayload = {
   qrDataUrl?: string
   pin?: string
   pinExpiresIn?: number
-  credits?: number
   planName?: string
   userName?: string
   error?: string
@@ -36,9 +35,8 @@ function PassSkeleton() {
         <div className="flex justify-between mb-6">
           <div className="space-y-2">
             <div className="h-6 w-28 bg-[#2A2A2A] rounded" />
-            <div className="h-3 w-20 bg-[#2A2A2A] rounded" />
+            <div className="h-3 w-36 bg-[#2A2A2A] rounded" />
           </div>
-          <div className="h-10 w-12 bg-[#2A2A2A] rounded" />
         </div>
         <div className="bg-[#2A2A2A] rounded-2xl aspect-square mb-4" />
         <div className="h-20 bg-[#0A0A0A] rounded-2xl" />
@@ -51,7 +49,6 @@ function PassSkeleton() {
 export default function PassPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [pin, setPin] = useState<string | null>(null)
-  const [credits, setCredits] = useState<number | null>(null)
   const [planName, setPlanName] = useState<string>('')
   const [userName, setUserName] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -81,7 +78,6 @@ export default function PassPage() {
 
       if (data.qrDataUrl) setQrDataUrl(data.qrDataUrl)
       if (data.pin) setPin(data.pin)
-      if (data.credits !== undefined) setCredits(data.credits)
       if (data.planName) setPlanName(data.planName)
       if (data.userName) setUserName(data.userName)
       setSecondsLeft(Math.ceil((data.pinExpiresIn ?? 60_000) / 1000))
@@ -128,7 +124,7 @@ export default function PassPage() {
               href="/pricing"
               className="inline-block bg-[#00FF7F] text-[#0A0A0A] px-6 py-3 rounded-lg font-bold"
             >
-              Choose a plan
+              Get membership
             </Link>
           ) : (
             <button
@@ -150,18 +146,12 @@ export default function PassPage() {
   return (
     <div className="flex flex-col items-center py-4 animate-fade-in">
       <div className="w-full max-w-sm bg-gradient-to-br from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-3xl p-6 shadow-2xl">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="font-display text-xl font-bold">
-              <span className="text-white">Drift</span>
-              <span className="text-[#00FF7F]">Pass</span>
-            </div>
-            <div className="text-xs text-[#6B7280] mt-0.5">{planName}</div>
+        <div className="mb-6">
+          <div className="font-display text-xl font-bold">
+            <span className="text-white">Drift</span>
+            <span className="text-[#00FF7F]">Pass</span>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-[#00FF7F]">{credits}</div>
-            <div className="text-xs text-[#6B7280]">credits</div>
-          </div>
+          <div className="text-xs text-[#6B7280] mt-0.5">{planName}</div>
         </div>
 
         <div className="bg-white rounded-2xl p-4 flex items-center justify-center aspect-square relative">
@@ -214,7 +204,7 @@ export default function PassPage() {
           </li>
           <li className="flex gap-2">
             <span className="text-[#00FF7F] font-bold flex-shrink-0">3.</span>
-            Credits deduct automatically — you&apos;re in
+            Your membership is verified — enjoy member perks
           </li>
         </ol>
       </div>

@@ -34,7 +34,9 @@ export type PartnerCategory =
   | 'tours'
   | 'other'
 
-export type PlanSlug = 'wanderer' | 'explorer' | 'nomad' | 'van_lifer'
+export type PlanSlug = 'membership' | 'wanderer' | 'explorer' | 'nomad' | 'van_lifer'
+
+export type PlanBillingPeriod = 'week' | 'fortnight'
 
 // ---- Plan ----
 export interface Plan {
@@ -45,6 +47,7 @@ export interface Plan {
   credits_per_month: number
   stripe_price_id: string
   audience_type: TravellerType
+  billing_period?: PlanBillingPeriod
   features: string[]
   is_active?: boolean
   is_popular?: boolean

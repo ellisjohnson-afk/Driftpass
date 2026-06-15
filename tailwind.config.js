@@ -9,17 +9,32 @@ module.exports = {
     extend: {
       colors: {
         drift: {
+          /* V1 — marketing / legacy pages */
           green: '#00FF7F',
           orange: '#FF6B35',
           dark: '#0A0A0A',
           grey: '#1A1A1A',
           muted: '#6B7280',
           border: '#2A2A2A',
+          /* V2 — Figma design system */
+          navy: '#0D1B2A',
+          'navy-light': '#1A2332',
+          'navy-deep': '#0B162C',
+          teal: '#2DD4BF',
+          'teal-dark': '#14B8A6',
+          gold: '#E8C872',
+          'gold-mid': '#F5D78E',
+          'gold-dark': '#C9A227',
+          cream: '#F5F0E8',
+          sheet: '#FFFFFF',
         },
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
         display: ['Georgia', 'serif'],
+      },
+      borderRadius: {
+        '4xl': '2rem',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

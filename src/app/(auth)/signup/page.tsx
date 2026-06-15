@@ -6,6 +6,10 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { resolveAuthNext, sanitizePlanSlug, buildPricingCheckoutPath } from '@/lib/auth/helpers'
+import {
+  confirmationRedirectUrl,
+  isDuplicateSignupUser,
+} from '@/lib/auth/confirmation'
 
 function SignupForm() {
   const [name, setName] = useState('')
@@ -14,9 +18,13 @@ function SignupForm() {
   const [travellerType, setTravellerType] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [awaitingEmailConfirm, setAwaitingEmailConfirm] = useState(false)
+  const [accountAlreadyExists, setAccountAlreadyExists] = useState(false)
+  const [info, setInfo] = useState<string | null>(null)
+  const [resending, setResending] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  const plan = sanitizePlanSlug(searchParams.get('plan')) ?? 'explorer'
+  const plan = sanitizePlanSlug(searchParams.get('plan')) ?? 'membership'
   const postAuthNext = resolveAuthNext({
     next: searchParams.get('next'),
     plan,
@@ -29,16 +37,24 @@ function SignupForm() {
     setError(null)
 
     const supabase = createClient()
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { full_name: name },
+        emailRedirectTo: `${window.location.origin}/callback`,
       },
     })
 
     if (signUpError) {
       setError(signUpError.message)
+      setLoading(false)
+      return
+    }
+
+    if (!signUpData.session) {
+      setAccountAlreadyExists(isDuplicateSignupUser(signUpData.user))
+      setAwaitingEmailConfirm(true)
       setLoading(false)
       return
     }
@@ -70,6 +86,30 @@ function SignupForm() {
     }
   }
 
+  async function handleResendConfirmation() {
+    if (!email) return
+
+    setResending(true)
+    setError(null)
+    setInfo(null)
+
+    const supabase = createClient()
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: confirmationRedirectUrl() },
+    })
+
+    setResending(false)
+
+    if (resendError) {
+      setError(resendError.message)
+      return
+    }
+
+    setInfo('Confirmation email sent. Check your inbox and spam folder.')
+  }
+
   const travellerTypes = [
     { value: 'backpacker', label: '🎒 Backpacker' },
     { value: 'digital_nomad', label: '💻 Digital Nomad' },
@@ -96,6 +136,36 @@ function SignupForm() {
             </div>
           )}
 
+          {info && (
+            <div className="rounded-lg border border-[#00FF7F]/30 bg-[#00FF7F]/10 px-4 py-3 text-sm text-[#00FF7F] mb-4">
+              {info}
+            </div>
+          )}
+
+          {awaitingEmailConfirm ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border border-[#00FF7F]/30 bg-[#00FF7F]/10 px-4 py-3 text-sm text-[#00FF7F]">
+                {accountAlreadyExists
+                  ? 'An account with this email already exists but is not confirmed yet. Resend the confirmation email, then sign in.'
+                  : 'Check your email to confirm your account, then sign in to start your membership.'}
+              </div>
+              <button
+                type="button"
+                onClick={() => { void handleResendConfirmation() }}
+                disabled={resending}
+                className="block w-full rounded-lg border border-[#2A2A2A] py-3 text-sm font-medium text-[#9CA3AF] transition-colors hover:border-[#00FF7F]/40 hover:text-white disabled:opacity-50"
+              >
+                {resending ? 'Sending…' : 'Resend confirmation email'}
+              </button>
+              <Link
+                href={loginHref}
+                className="block w-full rounded-lg bg-[#00FF7F] py-3 text-center font-bold text-[#0A0A0A] hover:bg-[#00E070] transition-colors"
+              >
+                Go to sign in
+              </Link>
+            </div>
+          ) : (
+          <>
           <OAuthButtons next={postAuthNext} disabled={loading} />
 
           <form onSubmit={(e) => { void handleSignup(e) }} className="space-y-4 mt-4">
@@ -167,18 +237,24 @@ function SignupForm() {
               {loading ? 'Setting up your pass...' : 'Continue to payment with email →'}
             </button>
           </form>
+          </>
+          )}
 
+          {!awaitingEmailConfirm && (
           <p className="text-center text-xs text-[#6B7280] mt-4">
             By signing up you agree to our{' '}
             <Link href="/terms" className="underline">Terms</Link>
           </p>
+          )}
 
+          {!awaitingEmailConfirm && (
           <p className="text-center text-sm text-[#6B7280] mt-4">
             Already have a pass?{' '}
             <Link href={loginHref} className="text-[#00FF7F] hover:underline">
               Sign in
             </Link>
           </p>
+          )}
         </div>
       </div>
     </div>

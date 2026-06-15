@@ -17,6 +17,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 // Map plan slugs to Stripe price IDs
 export const STRIPE_PRICE_IDS = {
+  membership: process.env.STRIPE_MEMBERSHIP_PRICE_ID!,
   wanderer: process.env.STRIPE_WANDERER_PRICE_ID!,
   explorer: process.env.STRIPE_EXPLORER_PRICE_ID!,
   nomad: process.env.STRIPE_NOMAD_PRICE_ID!,

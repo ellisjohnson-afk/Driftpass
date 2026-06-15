@@ -5,13 +5,16 @@ import {
   readAuthPostLoginCookie,
   resolveAuthNext,
 } from '@/lib/auth/helpers'
-import { canonicalAppPath, canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { appPathAt, appUrlAt } from '@/lib/auth/canonical-url'
+import { getAppOriginFromRequest } from '@/lib/auth/app-origin'
 
 // Supabase OAuth callback + email confirmation links.
 // Session cookies must be written onto the redirect response (not cookieStore alone).
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const code = searchParams.get('code')
+  const oauthError = searchParams.get('error')
+  const oauthErrorDescription = searchParams.get('error_description')
   const rawNext = searchParams.get('next')
   const rawPlan = searchParams.get('plan')
   const cookieDestination = readAuthPostLoginCookie(request.headers.get('cookie'))
@@ -20,18 +23,44 @@ export async function GET(request: NextRequest) {
     ? resolveAuthNext({ next: cookieDestination })
     : resolveAuthNext({ next: rawNext, plan: rawPlan })
 
-  const finalRedirect = canonicalAppPath(destination)
+  // Password recovery should always land on reset-password when next param says so
+  if (rawNext === '/reset-password' || cookieDestination === '/reset-password') {
+    destination = '/reset-password'
+  }
+
+  const appOrigin = getAppOriginFromRequest(request)
+  const finalRedirect = appPathAt(appOrigin, destination)
+
+  if (oauthError) {
+    console.error('[Auth callback] OAuth provider error:', oauthError, oauthErrorDescription)
+    return NextResponse.redirect(
+      appUrlAt(appOrigin, '/login', {
+        error: 'auth_callback_error',
+        error_detail: oauthErrorDescription ?? oauthError,
+        next: rawNext ?? undefined,
+        plan: rawPlan ?? undefined,
+      })
+    )
+  }
+
   console.log('[Auth callback]', {
     rawNext,
     rawPlan,
     cookieDestination,
     destination,
     finalRedirect,
+    appOrigin,
   })
 
   if (!code) {
+    console.error('[Auth callback] missing code param', request.nextUrl.toString())
     return NextResponse.redirect(
-      canonicalAppUrl('/login', { error: 'auth_callback_error', next: rawNext ?? undefined, plan: rawPlan ?? undefined })
+      appUrlAt(appOrigin, '/login', {
+        error: 'auth_callback_error',
+        error_detail: 'missing_code',
+        next: rawNext ?? undefined,
+        plan: rawPlan ?? undefined,
+      })
     )
   }
 
@@ -60,7 +89,12 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error('[Auth callback] exchangeCodeForSession failed:', error.message)
     return NextResponse.redirect(
-      canonicalAppUrl('/login', { error: 'auth_callback_error', next: rawNext ?? undefined, plan: rawPlan ?? undefined })
+      appUrlAt(appOrigin, '/login', {
+        error: 'auth_callback_error',
+        error_detail: error.message,
+        next: rawNext ?? undefined,
+        plan: rawPlan ?? undefined,
+      })
     )
   }
 

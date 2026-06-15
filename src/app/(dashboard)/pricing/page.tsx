@@ -1,8 +1,9 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { canonicalAppUrl } from '@/lib/auth/canonical-url'
-import { buildLoginReturnUrl, buildPricingCheckoutPath, sanitizePlanSlug } from '@/lib/auth/helpers'
+import { appUrlAt } from '@/lib/auth/canonical-url'
+import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
+import { sanitizePlanSlug } from '@/lib/auth/helpers'
 import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 import PricingClient from './PricingClient'
 
@@ -14,10 +15,12 @@ export default async function PricingPage({
   searchParams: { plan?: string }
 }) {
   const plan = sanitizePlanSlug(searchParams.plan)
+  const appOrigin = await getServerAppOrigin()
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
   if (!user) {
-    redirect(buildLoginReturnUrl(buildPricingCheckoutPath(plan)))
+    return <PricingClient initialPlan={plan} backHref="/" isAuthenticated={false} />
   }
 
   const admin = createAdminClient()
@@ -28,7 +31,7 @@ export default async function PricingPage({
     .in('status', [...PASS_ACTIVE_STATUSES])
     .maybeSingle()
 
-  if (sub) redirect(canonicalAppUrl('/account'))
+  if (sub) redirect(appUrlAt(appOrigin, '/account'))
 
-  return <PricingClient initialPlan={plan} />
+  return <PricingClient initialPlan={plan} backHref="/account" isAuthenticated />
 }

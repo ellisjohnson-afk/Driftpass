@@ -27,6 +27,12 @@ const env = loadEnv()
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2024-06-20' })
 
 const PLANS = [
+  {
+    slug: 'membership',
+    envKey: 'STRIPE_MEMBERSHIP_PRICE_ID',
+    expectedCents: 799,
+    weekly: true,
+  },
   { slug: 'wanderer', envKey: 'STRIPE_WANDERER_PRICE_ID', expectedCents: 2000 },
   { slug: 'explorer', envKey: 'STRIPE_EXPLORER_PRICE_ID', expectedCents: 3500 },
   { slug: 'nomad', envKey: 'STRIPE_NOMAD_PRICE_ID', expectedCents: 5900 },
@@ -45,16 +51,25 @@ for (const plan of PLANS) {
 
   const price = await stripe.prices.retrieve(priceId)
   const recurring = price.recurring
+  const isWeekly =
+    plan.weekly &&
+    recurring?.interval === 'week' &&
+    (recurring?.interval_count ?? 1) === 1
   const isFortnightly =
-    recurring?.interval === 'week' && recurring?.interval_count === 2
+    !plan.weekly &&
+    recurring?.interval === 'week' &&
+    recurring?.interval_count === 2
   const amountOk = price.unit_amount === plan.expectedCents
+  const intervalOk = isWeekly || isFortnightly
 
-  if (isFortnightly && amountOk) {
-    console.log(`✓ ${plan.slug}: A$${(price.unit_amount / 100).toFixed(2)} / 2 weeks (${priceId})`)
+  if (intervalOk && amountOk) {
+    const label = plan.weekly ? '/ week' : '/ 2 weeks'
+    console.log(`✓ ${plan.slug}: A$${(price.unit_amount / 100).toFixed(2)} ${label} (${priceId})`)
   } else {
     ok = false
+    const expected = plan.weekly ? 'weekly' : 'fortnightly'
     console.error(
-      `✗ ${plan.slug}: expected A$${(plan.expectedCents / 100).toFixed(2)} fortnightly, got`,
+      `✗ ${plan.slug}: expected A$${(plan.expectedCents / 100).toFixed(2)} ${expected}, got`,
       `${price.unit_amount} ${recurring?.interval}/${recurring?.interval_count}`
     )
   }

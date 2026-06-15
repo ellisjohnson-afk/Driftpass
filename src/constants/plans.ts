@@ -1,22 +1,47 @@
-import type { Plan } from '@/types'
+import type { Plan, PlanSlug } from '@/types'
 
 // ============================================================
-// DriftPass Plans — single source of truth
-// All credit costs and prices defined here.
+// DriftPass Plans
+// V2: single weekly membership for new signups.
+// Legacy fortnightly tiers remain for existing subscribers + ?plan= URLs.
 // Update Stripe price IDs in .env, not here.
 // ============================================================
 
-// All plans are billed every 2 weeks (bi-weekly).
-// In Stripe: interval = 'week', interval_count = 2
-export const PLANS: Plan[] = [
+export const MEMBERSHIP_INCLUSIONS = [
+  'Member-only discounts',
+  'Exclusive local deals',
+  'Access to the Drift Pass marketplace',
+  'Weekly traveller perks',
+  'Fitness, coffee and activity offers',
+  'Australia-wide partner network',
+  'Cancel anytime',
+] as const
+
+/** V2 default — A$7.99/week */
+export const MEMBERSHIP_PLAN: Plan = {
+  id: 'membership',
+  name: 'Drift Pass Membership',
+  slug: 'membership',
+  price_aud_cents: 799,
+  credits_per_month: 0,
+  stripe_price_id: process.env.STRIPE_MEMBERSHIP_PRICE_ID ?? '',
+  audience_type: 'backpacker',
+  billing_period: 'week',
+  is_popular: true,
+  features: [...MEMBERSHIP_INCLUSIONS],
+}
+
+/** V1 fortnightly tiers — grandfathered; still resolvable via webhook + ?plan= checkout */
+export const LEGACY_PLANS: Plan[] = [
   {
     id: 'wanderer',
     name: 'Wanderer',
     slug: 'wanderer',
-    price_aud_cents: 2000,          // A$20 / 2 weeks
-    credits_per_month: 25,          // credits per 2-week period
+    price_aud_cents: 2000,
+    credits_per_month: 25,
     stripe_price_id: process.env.STRIPE_WANDERER_PRICE_ID ?? '',
     audience_type: 'backpacker',
+    billing_period: 'fortnight',
     is_popular: false,
     features: [
       '25 credits / 2 weeks',
@@ -31,10 +56,11 @@ export const PLANS: Plan[] = [
     id: 'explorer',
     name: 'Explorer',
     slug: 'explorer',
-    price_aud_cents: 3500,          // A$35 / 2 weeks
-    credits_per_month: 42,          // credits per 2-week period
+    price_aud_cents: 3500,
+    credits_per_month: 42,
     stripe_price_id: process.env.STRIPE_EXPLORER_PRICE_ID ?? '',
     audience_type: 'backpacker',
+    billing_period: 'fortnight',
     is_popular: true,
     features: [
       '42 credits / 2 weeks',
@@ -49,10 +75,11 @@ export const PLANS: Plan[] = [
     id: 'nomad',
     name: 'Nomad',
     slug: 'nomad',
-    price_aud_cents: 5900,          // A$59 / 2 weeks
-    credits_per_month: 70,          // credits per 2-week period
+    price_aud_cents: 5900,
+    credits_per_month: 70,
     stripe_price_id: process.env.STRIPE_NOMAD_PRICE_ID ?? '',
     audience_type: 'digital_nomad',
+    billing_period: 'fortnight',
     is_popular: false,
     features: [
       '70 credits / 2 weeks',
@@ -67,10 +94,11 @@ export const PLANS: Plan[] = [
     id: 'van_lifer',
     name: 'Van Lifer',
     slug: 'van_lifer',
-    price_aud_cents: 2200,          // A$22 / 2 weeks
-    credits_per_month: 25,          // credits per 2-week period
+    price_aud_cents: 2200,
+    credits_per_month: 25,
     stripe_price_id: process.env.STRIPE_VAN_LIFER_PRICE_ID ?? '',
     audience_type: 'van_lifer',
+    billing_period: 'fortnight',
     is_popular: false,
     features: [
       '25 credits / 2 weeks',
@@ -84,13 +112,24 @@ export const PLANS: Plan[] = [
   },
 ]
 
-export const PLAN_BY_SLUG = Object.fromEntries(
-  PLANS.map((p) => [p.slug, p])
-) as Record<string, Plan>
+/** All plans — used for slug/price lookups (webhooks, legacy checkout) */
+export const ALL_PLANS: Plan[] = [MEMBERSHIP_PLAN, ...LEGACY_PLANS]
 
-// Dynamic lookup — evaluated at call time so env vars are populated
+/** @deprecated Use ALL_PLANS — kept for imports that expect PLANS */
+export const PLANS = ALL_PLANS
+
+export const PLAN_BY_SLUG = Object.fromEntries(
+  ALL_PLANS.map((p) => [p.slug, p])
+) as Record<PlanSlug, Plan>
+
+export const LEGACY_PLAN_SLUGS = LEGACY_PLANS.map((p) => p.slug)
+
+export function isLegacyPlanSlug(slug: string): slug is Exclude<PlanSlug, 'membership'> {
+  return slug !== 'membership' && slug in PLAN_BY_SLUG
+}
+
 export function getPlanByPriceId(priceId: string): Plan | undefined {
-  return PLANS.find((p) => p.stripe_price_id === priceId)
+  return ALL_PLANS.find((p) => p.stripe_price_id === priceId)
 }
 
 export const PLAN_BY_PRICE_ID = new Proxy({} as Record<string, Plan>, {

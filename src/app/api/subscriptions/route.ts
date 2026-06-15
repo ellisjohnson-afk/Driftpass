@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { stripe, STRIPE_PRICE_IDS } from '@/lib/stripe/config'
-import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { appUrlAt } from '@/lib/auth/canonical-url'
+import { getAppOriginFromRequest } from '@/lib/auth/app-origin'
 import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 
 const CreateSubscriptionSchema = z.object({
-  planSlug: z.enum(['wanderer', 'explorer', 'nomad', 'van_lifer']),
+  planSlug: z
+    .enum(['membership', 'wanderer', 'explorer', 'nomad', 'van_lifer'])
+    .default('membership'),
 })
 
 // POST /api/subscriptions — create Stripe Checkout session
@@ -28,13 +32,24 @@ export async function POST(req: NextRequest) {
   const { planSlug } = parsed.data
   const priceId = STRIPE_PRICE_IDS[planSlug]
 
-  const { data: planRow } = await supabase
+  if (!priceId) {
+    return NextResponse.json(
+      { error: `Stripe price not configured for plan: ${planSlug}` },
+      { status: 500 }
+    )
+  }
+
+  // Service role — plan rows are app config; user-session RLS may not expose them yet.
+  const admin = createAdminClient()
+  const { data: planRow, error: planError } = await admin
     .from('plans')
     .select('id')
     .eq('slug', planSlug)
-    .single()
+    .eq('is_active', true)
+    .maybeSingle()
 
-  if (!planRow) {
+  if (planError || !planRow) {
+    console.error('[subscriptions] plan lookup failed', { planSlug, planError })
     return NextResponse.json({ error: 'Plan not configured in database' }, { status: 500 })
   }
 
@@ -82,15 +97,20 @@ export async function POST(req: NextRequest) {
     customerId = customer.id
   }
 
-  // Always return to canonical host so auth cookies match the session.
+  // Return to the same origin as the request so auth cookies match (localhost in dev).
+  const appOrigin = getAppOriginFromRequest(req)
+  // Stripe replaces {CHECKOUT_SESSION_ID} literally — must not URL-encode the braces.
+  const accountSuccessBase = appUrlAt(appOrigin, '/account', { subscribed: 'true' })
+  const successUrl = `${accountSuccessBase}&session_id={CHECKOUT_SESSION_ID}`
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     client_reference_id: user.id,
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
     mode: 'subscription',
-    success_url: canonicalAppUrl('/account', { subscribed: 'true' }),
-    cancel_url: canonicalAppUrl('/pricing'),
+    success_url: successUrl,
+    cancel_url: appUrlAt(appOrigin, '/pricing'),
     metadata: {
       userId: user.id,
       planSlug,

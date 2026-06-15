@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
 import { resolveAuthNext, withTimeout } from '@/lib/auth/helpers'
+import { confirmationRedirectUrl, formatSignInError, passwordRecoveryRedirectUrl } from '@/lib/auth/confirmation'
 
 const SIGN_IN_TIMEOUT_MS = 20_000
 
@@ -13,7 +14,10 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
+  const [resetting, setResetting] = useState(false)
   const searchParams = useSearchParams()
   const plan = searchParams.get('plan')
   const next = resolveAuthNext({
@@ -21,6 +25,7 @@ function LoginForm() {
     plan,
   })
   const callbackError = searchParams.get('error')
+  const callbackErrorDetail = searchParams.get('error_detail')
   const signupHref = plan
     ? `/signup?next=/checkout&plan=${plan}`
     : next !== '/account'
@@ -43,13 +48,13 @@ function LoginForm() {
 
     try {
       const { data, error: signInError } = await withTimeout(
-        supabase.auth.signInWithPassword({ email, password }),
+        supabase.auth.signInWithPassword({ email: email.trim(), password }),
         SIGN_IN_TIMEOUT_MS,
         'Sign in timed out. Check your connection and try again.'
       )
 
       if (signInError) {
-        setError(signInError.message)
+        setError(formatSignInError(signInError.message))
         setLoading(false)
         return
       }
@@ -69,6 +74,59 @@ function LoginForm() {
     }
   }
 
+  async function handleResendConfirmation() {
+    if (!email) {
+      setError('Enter your email above, then resend the confirmation link.')
+      return
+    }
+
+    setResending(true)
+    setError(null)
+    setInfo(null)
+
+    const supabase = createClient()
+    const { error: resendError } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: confirmationRedirectUrl() },
+    })
+
+    setResending(false)
+
+    if (resendError) {
+      setError(resendError.message)
+      return
+    }
+
+    setInfo('Confirmation email sent. Check your inbox and spam folder, then sign in.')
+  }
+
+  async function handleForgotPassword() {
+    const trimmed = email.trim()
+    if (!trimmed) {
+      setError('Enter your email above, then use Forgot password.')
+      return
+    }
+
+    setResetting(true)
+    setError(null)
+    setInfo(null)
+
+    const supabase = createClient()
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
+      redirectTo: passwordRecoveryRedirectUrl(),
+    })
+
+    setResetting(false)
+
+    if (resetError) {
+      setError(resetError.message)
+      return
+    }
+
+    setInfo('Password reset email sent. Open the link, set a new password on the reset page, then sign in.')
+  }
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
@@ -82,7 +140,16 @@ function LoginForm() {
 
           {(error || callbackError) && (
             <div className="bg-red-900/30 border border-red-800 text-red-400 rounded-lg px-4 py-3 text-sm mb-4">
-              {error ?? 'Sign in failed. Please try again.'}
+              {error ??
+                (callbackErrorDetail
+                  ? `Sign in failed: ${callbackErrorDetail}`
+                  : 'Sign in failed. Please try again.')}
+            </div>
+          )}
+
+          {info && (
+            <div className="rounded-lg border border-[#00FF7F]/30 bg-[#00FF7F]/10 px-4 py-3 text-sm text-[#00FF7F] mb-4">
+              {info}
             </div>
           )}
 
@@ -104,7 +171,17 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm text-[#9CA3AF] mb-1.5">Password</label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm text-[#9CA3AF]">Password</label>
+                <button
+                  type="button"
+                  onClick={() => { void handleForgotPassword() }}
+                  disabled={loading || resetting}
+                  className="text-xs text-[#00FF7F] hover:underline disabled:opacity-50"
+                >
+                  {resetting ? 'Sending…' : 'Forgot password?'}
+                </button>
+              </div>
               <input
                 type="password"
                 value={password}
@@ -128,6 +205,15 @@ function LoginForm() {
               {loading ? 'Signing in…' : 'Sign in with email'}
             </button>
           </form>
+
+          <button
+            type="button"
+            onClick={() => { void handleResendConfirmation() }}
+            disabled={loading || resending}
+            className="mt-3 w-full rounded-lg border border-[#2A2A2A] py-2.5 text-sm text-[#9CA3AF] transition-colors hover:border-[#00FF7F]/40 hover:text-white disabled:opacity-50"
+          >
+            {resending ? 'Sending confirmation…' : 'Resend confirmation email'}
+          </button>
 
           <p className="text-center text-sm text-[#6B7280] mt-6">
             Don&apos;t have a pass?{' '}

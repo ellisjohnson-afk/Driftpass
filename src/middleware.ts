@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import {
-  canonicalAppPath,
+  appPathAt,
+  appUrlAt,
   canonicalAppUrl,
   isCanonicalProductionHost,
   toCanonicalProductionUrl,
 } from '@/lib/auth/canonical-url'
-import { buildLoginReturnUrl, resolveAuthNext } from '@/lib/auth/helpers'
+import { getAppOriginFromRequest } from '@/lib/auth/app-origin'
+import { buildLoginReturnUrl, resolveAuthNext, readAuthPostLoginCookie } from '@/lib/auth/helpers'
 
 // ============================================================
 // DriftPass Middleware
@@ -14,21 +16,61 @@ import { buildLoginReturnUrl, resolveAuthNext } from '@/lib/auth/helpers'
 // 2. Guards protected routes (dashboard, partner portal)
 // ============================================================
 
-const PROTECTED_ROUTES = ['/dashboard', '/account', '/pass', '/pricing']
+const PROTECTED_ROUTES = ['/dashboard', '/account', '/pass', '/design-preview']
 const PARTNER_ROUTES: string[] = []  // /portal not yet built; /scan is public (PIN-based, no login needed)
 const AUTH_ROUTES = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
   const host = request.headers.get('host') ?? ''
+  const appOrigin = getAppOriginFromRequest(request)
+
+  // Supabase auth errors often land on Site URL (/) — send to login with a readable message
+  if (pathname === '/' && request.nextUrl.searchParams.has('error')) {
+    const errorCode = request.nextUrl.searchParams.get('error_code')
+    const errorDescription = request.nextUrl.searchParams.get('error_description')
+    const detail =
+      errorCode === 'otp_expired'
+        ? 'This link has expired. Request a new password reset from the login page.'
+        : (errorDescription ?? request.nextUrl.searchParams.get('error') ?? 'auth_callback_error')
+    return NextResponse.redirect(
+      appUrlAt(appOrigin, '/login', {
+        error: 'auth_callback_error',
+        error_detail: detail,
+        next: '/pricing',
+        plan: 'membership',
+      })
+    )
+  }
 
   // Supabase may fall back to Site URL — forward /?code=... to /callback?code=...
   if (pathname === '/' && request.nextUrl.searchParams.has('code')) {
-    const callbackUrl = new URL('/callback', toCanonicalProductionUrl('', ''))
+    const callbackUrl = new URL('/callback', getAppOriginFromRequest(request))
     request.nextUrl.searchParams.forEach((value, key) => {
       callbackUrl.searchParams.set(key, value)
     })
+    const postLogin = readAuthPostLoginCookie(
+      request.cookies
+        .getAll()
+        .map((c) => `${c.name}=${c.value}`)
+        .join('; ')
+    )
+    if (postLogin && !callbackUrl.searchParams.has('next')) {
+      callbackUrl.searchParams.set('next', postLogin.startsWith('/') ? postLogin : `/${postLogin}`)
+    }
     console.log('[Middleware] forwarding Site URL OAuth code to callback:', callbackUrl.toString())
+    return NextResponse.redirect(callbackUrl.toString(), 307)
+  }
+
+  // Recovery link may land on /reset-password?code=... — route through callback with next preserved
+  if (pathname === '/reset-password' && request.nextUrl.searchParams.has('code')) {
+    const callbackUrl = new URL('/callback', getAppOriginFromRequest(request))
+    request.nextUrl.searchParams.forEach((value, key) => {
+      callbackUrl.searchParams.set(key, value)
+    })
+    if (!callbackUrl.searchParams.has('next')) {
+      callbackUrl.searchParams.set('next', '/reset-password')
+    }
     return NextResponse.redirect(callbackUrl.toString(), 307)
   }
 
@@ -79,15 +121,16 @@ export async function middleware(request: NextRequest) {
       rawNext: request.nextUrl.searchParams.get('next'),
       rawPlan: request.nextUrl.searchParams.get('plan'),
       destination,
+      appOrigin,
     })
-    return NextResponse.redirect(canonicalAppPath(destination))
+    return NextResponse.redirect(appPathAt(appOrigin, destination))
   }
 
   // Guard dashboard routes — preserve path + query (e.g. /pricing?plan=explorer)
   if (PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!user) {
       const returnTo = pathname + search
-      return NextResponse.redirect(buildLoginReturnUrl(returnTo))
+      return NextResponse.redirect(buildLoginReturnUrl(returnTo, appOrigin))
     }
   }
 
@@ -95,7 +138,7 @@ export async function middleware(request: NextRequest) {
   if (PARTNER_ROUTES.some((r) => pathname.startsWith(r))) {
     if (!user) {
       const returnTo = pathname + search
-      return NextResponse.redirect(buildLoginReturnUrl(returnTo))
+      return NextResponse.redirect(buildLoginReturnUrl(returnTo, appOrigin))
     }
 
     // Check partner_user record (lightweight check)
@@ -107,7 +150,7 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (!partnerUser) {
-      return NextResponse.redirect(canonicalAppUrl('/dashboard'))
+      return NextResponse.redirect(appUrlAt(appOrigin, '/dashboard'))
     }
   }
 

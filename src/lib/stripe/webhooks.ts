@@ -1,16 +1,12 @@
 import type Stripe from 'stripe'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendWelcomeEmail, sendSubscriptionCanceledEmail } from '@/lib/email/resend'
-import { userPinShard } from '@/lib/qr/generator'
 import { stripe } from '@/lib/stripe/config'
 import {
-  ensureProfileExists,
+  activateCheckoutSession,
   normalizeSubscriptionStatus,
   requirePlanDefinitionBySlug,
-  requirePlanRowBySlug,
-  resolvePlanSlugForCheckout,
   resolveUserIdFromStripe,
-  subscriptionHasInitialCredits,
 } from '@/lib/stripe/activation'
 
 // ============================================================
@@ -24,7 +20,6 @@ export async function handleCheckoutSessionCompleted(
 ) {
   if (session.mode !== 'subscription') return
 
-  const supabase = createAdminClient()
   const userId = await resolveUserIdFromStripe(session)
   const subscriptionId =
     typeof session.subscription === 'string'
@@ -44,96 +39,13 @@ export async function handleCheckoutSessionCompleted(
     throw new Error('checkout.session.completed missing user/subscription/customer mapping')
   }
 
-  const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId)
-  const planSlug = await resolvePlanSlugForCheckout(supabase, session, stripeSubscription)
+  await activateCheckoutSession(session.id)
 
-  if (!planSlug) {
-    console.error('[Webhook] could not resolve plan from checkout session', {
-      sessionId: session.id,
-      metadata: session.metadata,
-      subMetadata: stripeSubscription.metadata,
-      priceId: stripeSubscription.items.data[0]?.price?.id,
-    })
-    throw new Error('Unable to resolve plan for subscription activation')
-  }
+  const planSlug = session.metadata?.planSlug
+  if (!planSlug) return
 
   const plan = requirePlanDefinitionBySlug(planSlug)
-  const planRow = await requirePlanRowBySlug(supabase, planSlug)
-
-  const profileOk = await ensureProfileExists(supabase, userId)
-  if (!profileOk) {
-    throw new Error(`checkout.session.completed profile missing for user ${userId}`)
-  }
-
-  const periodStartUnix =
-    stripeSubscription.current_period_start ?? stripeSubscription.billing_cycle_anchor
-  const periodEndUnix =
-    stripeSubscription.current_period_end ?? stripeSubscription.billing_cycle_anchor
-
-  if (periodStartUnix == null || periodEndUnix == null) {
-    throw new Error('Unable to resolve subscription billing period for activation')
-  }
-
-  const status = normalizeSubscriptionStatus(stripeSubscription.status)
-
-  const { data: sub, error: subError } = await supabase
-    .from('subscriptions')
-    .upsert(
-      {
-        user_id: userId,
-        plan_id: planRow.id,
-        stripe_subscription_id: stripeSubscription.id,
-        stripe_customer_id: customerId,
-        status,
-        current_period_start: new Date(periodStartUnix * 1000).toISOString(),
-        current_period_end: new Date(periodEndUnix * 1000).toISOString(),
-        cancel_at_period_end: stripeSubscription.cancel_at_period_end,
-        pin_shard: userPinShard(userId),
-      },
-      { onConflict: 'stripe_subscription_id' }
-    )
-    .select('id, user_id, plan_id')
-    .single()
-
-  if (subError || !sub) {
-    console.error('[Webhook] subscription upsert failed', {
-      sessionId: session.id,
-      userId,
-      planSlug,
-      error: subError?.message,
-    })
-    throw new Error(subError?.message ?? 'subscription upsert returned no row')
-  }
-
-  const alreadyCredited = await subscriptionHasInitialCredits(supabase, sub.id)
-  if (!alreadyCredited) {
-    const { error: creditError } = await supabase.rpc('credit_monthly_allowance', {
-      p_user_id: userId,
-      p_subscription_id: sub.id,
-      p_plan_id: planRow.id,
-    })
-
-    if (creditError) {
-      console.error('[Webhook] credit_monthly_allowance failed', {
-        sessionId: session.id,
-        userId,
-        subscriptionId: sub.id,
-        planSlug,
-        error: creditError.message,
-      })
-      throw new Error(`credit_monthly_allowance failed: ${creditError.message}`)
-    }
-  }
-
-  console.log('[Webhook] subscription activated', {
-    sessionId: session.id,
-    userId,
-    planSlug,
-    subscriptionId: sub.id,
-    status,
-    creditsGranted: !alreadyCredited,
-  })
-
+  const supabase = createAdminClient()
   const { data: profile } = await supabase
     .from('profiles')
     .select('email, full_name')
@@ -152,6 +64,12 @@ export async function handleCheckoutSessionCompleted(
       console.warn('[Webhook] welcome email failed (non-fatal)', emailError)
     }
   }
+
+  console.log('[Webhook] subscription activated', {
+    sessionId: session.id,
+    userId,
+    planSlug,
+  })
 }
 
 export async function handleInvoicePaid(invoice: Stripe.Invoice) {
@@ -185,6 +103,14 @@ export async function handleInvoicePaid(invoice: Stripe.Invoice) {
       current_period_end: new Date(stripeSub.current_period_end * 1000).toISOString(),
     })
     .eq('id', sub.id)
+
+  const { data: planRow } = await supabase
+    .from('plans')
+    .select('credits_per_month')
+    .eq('id', sub.plan_id)
+    .single()
+
+  if (!planRow || planRow.credits_per_month <= 0) return
 
   const { error: creditError } = await supabase.rpc('credit_monthly_allowance', {
     p_user_id: sub.user_id,

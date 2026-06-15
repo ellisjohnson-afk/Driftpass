@@ -1,17 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { stripe } from '@/lib/stripe/config'
-import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { appUrlAt } from '@/lib/auth/canonical-url'
+import { getAppOriginFromRequest } from '@/lib/auth/app-origin'
 
 // POST /api/stripe/portal-redirect
 // Creates a Stripe Customer Portal session and redirects the user
-export async function POST(_req: Request) {
+export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  const appOrigin = getAppOriginFromRequest(req)
 
   if (!user) {
-    return NextResponse.redirect(canonicalAppUrl('/login', { next: '/account' }))
+    return NextResponse.redirect(appUrlAt(appOrigin, '/login', { next: '/account' }))
   }
 
   const admin = createAdminClient()
@@ -24,12 +26,12 @@ export async function POST(_req: Request) {
     .single()
 
   if (!sub?.stripe_customer_id) {
-    return NextResponse.redirect(canonicalAppUrl('/account'))
+    return NextResponse.redirect(appUrlAt(appOrigin, '/account'))
   }
 
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: sub.stripe_customer_id,
-    return_url: canonicalAppUrl('/account'),
+    return_url: appUrlAt(appOrigin, '/account'),
   })
 
   return NextResponse.redirect(portalSession.url)

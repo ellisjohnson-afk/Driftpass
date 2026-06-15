@@ -1,6 +1,14 @@
-import { CANONICAL_APP_ORIGIN } from '@/lib/auth/canonical-url'
+import type { NextRequest } from 'next/server'
+import { resolveAppOrigin } from '@/lib/auth/canonical-url'
 
-/** Always return the canonical app origin — never infer from request headers. */
-export function getAppOrigin(_req?: Request): string {
-  return CANONICAL_APP_ORIGIN
+export function getAppOriginFromRequest(request: NextRequest): string {
+  return resolveAppOrigin(request.headers.get('host'), request.nextUrl.origin)
+}
+
+/** Browser-only — uses the page origin (localhost:3004, www.driftpass.com.au, etc.). */
+export function getClientAppOrigin(): string {
+  if (typeof window === 'undefined') {
+    throw new Error('getClientAppOrigin() is client-only')
+  }
+  return window.location.origin
 }

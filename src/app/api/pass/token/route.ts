@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generatePassToken, generateQRDataURL, generatePassPIN, pinExpiresInMs } from '@/lib/qr/generator'
-import { getCreditBalance } from '@/lib/credits/engine'
 import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 
 // GET /api/pass/token — generate a fresh QR token for the subscriber's pass
@@ -19,7 +18,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data: sub } = await admin
     .from('subscriptions')
-    .select('id, plans(name, credits_per_month)')
+    .select('id, plans(name)')
     .eq('user_id', user.id)
     .in('status', [...PASS_ACTIVE_STATUSES])
     .order('created_at', { ascending: false })
@@ -41,14 +40,12 @@ export async function GET() {
   const qrDataUrl = await generateQRDataURL(token)
   const pin = generatePassPIN(user.id, sub.id)
   const pinExpiresIn = pinExpiresInMs()
-  const balance = await getCreditBalance(user.id)
   const plan = sub.plans as { name?: string } | null
 
   return NextResponse.json({
     qrDataUrl,
     pin,
     pinExpiresIn,
-    credits: balance.remaining_credits,
     planName: plan?.name ?? 'DriftPass',
     userName: profile?.full_name ?? user.email ?? 'Drifter',
   })

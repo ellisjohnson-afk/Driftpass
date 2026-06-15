@@ -3,10 +3,26 @@
 @tailwind utilities;
 
 :root {
-  --drift-green: #00FF7F;
-  --drift-orange: #FF6B35;
-  --drift-dark: #0A0A0A;
-  --drift-grey: #1A1A1A;
+  /* V1 tokens — kept for marketing pages until migrated */
+  --drift-green: #00ff7f;
+  --drift-orange: #ff6b35;
+  --drift-dark: #0a0a0a;
+  --drift-grey: #1a1a1a;
+
+  /* V2 Figma design tokens */
+  --drift-navy: #0d1b2a;
+  --drift-navy-light: #1a2332;
+  --drift-navy-deep: #0b162c;
+  --drift-teal: #2dd4bf;
+  --drift-teal-dark: #14b8a6;
+  --drift-gold-from: #e8c872;
+  --drift-gold-mid: #f5d78e;
+  --drift-gold-to: #c9a227;
+  --drift-cream: #f5f0e8;
+  --drift-sheet: #ffffff;
+  --drift-text-muted: #94a3b8;
+  --drift-text-subtle: #64748b;
+  --drift-border: #2a3a4f;
 }
 
 * {
@@ -18,24 +34,47 @@ html {
 }
 
 body {
-  background-color: var(--drift-dark);
+  background-color: var(--drift-navy);
   color: white;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* QR code container */
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .bg-drift-navy-gradient {
+    background: linear-gradient(180deg, var(--drift-navy-light) 0%, var(--drift-navy) 55%, var(--drift-navy-deep) 100%);
+  }
+
+  .bg-drift-gold-gradient {
+    background: linear-gradient(135deg, var(--drift-gold-from) 0%, var(--drift-gold-mid) 45%, var(--drift-gold-to) 100%);
+  }
+
+  .shadow-drift-fab {
+    box-shadow:
+      0 0 0 4px rgba(45, 212, 191, 0.2),
+      0 8px 24px rgba(45, 212, 191, 0.35);
+  }
+
+  .shadow-drift-card {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  }
+}
+
+/* QR code container — legacy pass page */
 .qr-container canvas {
   border-radius: 12px;
 }
 
-/* Credit bar animation */
+/* Credit bar animation — legacy dashboard */
 .credit-bar {
   transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Partner card hover */
 .partner-card {
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
@@ -43,7 +82,6 @@ body {
   transform: translateY(-2px);
 }
 
-/* Flash deal pulse */
 .flash-pulse {
   animation: flashPulse 1.5s ease-in-out infinite;
 }
@@ -51,4 +89,13 @@ body {
 @keyframes flashPulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
 }

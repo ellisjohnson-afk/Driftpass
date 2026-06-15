@@ -43,7 +43,7 @@ Metadata on Checkout session (all plans):
 ```json
 {
   "userId": "<supabase auth uuid>",
-  "planSlug": "wanderer|explorer|nomad|van_lifer",
+  "planSlug": "membership|wanderer|explorer|nomad|van_lifer",
   "planId": "<plans.id uuid>"
 }
 ```

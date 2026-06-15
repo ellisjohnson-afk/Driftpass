@@ -2,10 +2,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
-import { getCreditBalance } from '@/lib/credits/engine'
-import { canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { appUrlAt } from '@/lib/auth/canonical-url'
+import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
-import { formatAUD, formatDate, creditPercentage } from '@/lib/utils/format'
+import { formatDate } from '@/lib/utils/format'
+import { MembershipCard } from '@/components/pass/MembershipCard'
 import type { Partner } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -13,139 +14,104 @@ export const dynamic = 'force-dynamic'
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(canonicalAppUrl('/login', { next: '/dashboard' }))
+  const appOrigin = await getServerAppOrigin()
+  if (!user) redirect(appUrlAt(appOrigin, '/login', { next: '/dashboard' }))
 
-  // Subscription status — use admin client to bypass RLS
   const admin = createAdminClient()
-  const { data: sub, error: subError } = await admin
+  const { data: sub } = await admin
     .from('subscriptions')
-    .select('id, status, cancel_at_period_end, current_period_end, plans(name, credits_per_month)')
+    .select('id, status, cancel_at_period_end, current_period_end, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
   if (!sub || !isPassActive(sub.status)) {
-    redirect(canonicalAppUrl('/pricing'))
+    redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  // Credit balance
-  const balance = await getCreditBalance(user.id)
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('full_name, created_at')
+    .eq('id', user.id)
+    .single()
 
-  // Recent partners (all, for now — geo filter in Phase 2)
   const { data: partners } = await supabase
     .from('partners')
-    .select('id, name, category, city, address, google_rating, logo_url, partner_services(credit_cost, name, service_type, is_active)')
+    .select('id, name, category, city, address, google_rating, logo_url, partner_services(name, service_type, is_active)')
     .eq('is_active', true)
     .is('deleted_at', null)
     .order('is_featured', { ascending: false })
     .limit(6)
 
-  // Recent redemptions
-  const { data: redemptions } = await supabase
-    .from('redemptions')
-    .select('id, credits_used, created_at, partners(name), partner_services(name)')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(5)
-
-  const planName = (sub?.plans as { name?: string } | null)?.name ?? 'DriftPass'
-  const pct = creditPercentage(balance.used_credits, balance.total_credits)
+  const memberName = profile?.full_name ?? user.email?.split('@')[0] ?? 'Member'
+  const memberSince = sub.created_at ? formatDate(sub.created_at) : undefined
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Credit Balance Card */}
-      <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <div className="text-xs text-[#6B7280] uppercase tracking-wide mb-1">{planName} Plan</div>
-            <div className="text-4xl font-bold text-[#00FF7F]">
-              {balance.remaining_credits}
-              <span className="text-lg text-[#6B7280] font-normal"> credits left</span>
-            </div>
+      <header>
+        <p className="text-xs uppercase tracking-widest text-drift-teal">Explore</p>
+        <h1 className="mt-1 text-xl font-bold">Discover partners near you</h1>
+        <p className="mt-1 text-sm text-drift-text-muted">
+          Member discounts and local perks — show your pass at checkout.
+        </p>
+      </header>
+
+      <Link href="/pass" className="block transition-transform hover:scale-[1.01]">
+        <MembershipCard
+          variant="compact"
+          memberName={memberName}
+          memberSince={memberSince}
+          instruction="Tap to open your pass and PIN"
+        />
+      </Link>
+
+      {sub.cancel_at_period_end && (
+        <div className="rounded-xl border border-yellow-800 bg-yellow-900/20 px-4 py-3 text-sm text-yellow-400">
+          Your membership ends on {formatDate(sub.current_period_end)}.{' '}
+          <Link href="/account" className="underline">Manage billing</Link>
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/pass"
+          className="rounded-xl border border-drift-border bg-drift-navy-light p-4 text-center transition-colors hover:border-drift-teal/50"
+        >
+          <div className="text-2xl mb-1">🎫</div>
+          <div className="text-xs text-drift-text-muted">My Pass</div>
+        </Link>
+        <Link
+          href="/account"
+          className="rounded-xl border border-drift-border bg-drift-navy-light p-4 text-center transition-colors hover:border-drift-teal/50"
+        >
+          <div className="text-2xl mb-1">⚙️</div>
+          <div className="text-xs text-drift-text-muted">Account</div>
+        </Link>
+      </div>
+
+      <section>
+        <h2 className="mb-3 flex items-center justify-between font-semibold">
+          Partners near you
+          <span className="text-xs font-normal text-drift-text-muted">Airlie Beach</span>
+        </h2>
+
+        {(partners ?? []).length > 0 ? (
+          <div className="space-y-3">
+            {(partners ?? []).map((p) => (
+              <PartnerCard key={p.id} partner={p as unknown as Partner} />
+            ))}
           </div>
-          <Link
-            href="/pass"
-            className="bg-[#00FF7F] text-[#0A0A0A] px-4 py-2 rounded-lg text-sm font-bold hover:bg-[#00E070] transition-colors"
-          >
-            My Pass
-          </Link>
-        </div>
-
-        {/* Credit bar */}
-        <div className="bg-[#2A2A2A] rounded-full h-2 mb-2">
-          <div
-            className="bg-[#00FF7F] rounded-full h-2 credit-bar transition-all"
-            style={{ width: `${100 - pct}%` }}
-          />
-        </div>
-        <div className="flex justify-between text-xs text-[#6B7280]">
-          <span>{balance.used_credits} used</span>
-          <span>Resets {formatDate(balance.period_end)}</span>
-        </div>
-
-        {sub?.cancel_at_period_end && (
-          <div className="mt-4 bg-yellow-900/20 border border-yellow-800 rounded-lg px-4 py-2 text-sm text-yellow-400">
-            Your subscription will cancel on {formatDate(balance.period_end)}.{' '}
-            <Link href="/account" className="underline">Reactivate</Link>
+        ) : (
+          <div className="rounded-xl border border-drift-border bg-drift-navy-light px-4 py-8 text-center text-sm text-drift-text-muted">
+            More partners coming soon across Australia.
           </div>
         )}
-      </div>
-
-      {/* Quick actions */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { emoji: '🎫', label: 'My Pass', href: '/pass' },
-          { emoji: '⚡', label: 'Flash Deals', href: '/flash' },
-          { emoji: '🗺️', label: 'Route Map', href: '/map' },
-        ].map(({ emoji, label, href }) => (
-          <Link
-            key={href}
-            href={href}
-            className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-4 text-center hover:border-[#00FF7F]/50 transition-colors"
-          >
-            <div className="text-2xl mb-1">{emoji}</div>
-            <div className="text-xs text-[#9CA3AF]">{label}</div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Nearby Partners */}
-      <section>
-        <h2 className="font-semibold mb-3 flex items-center justify-between">
-          Partners near you
-          <span className="text-xs text-[#6B7280]">Airlie Beach</span>
-        </h2>
-        <div className="space-y-3">
-          {(partners ?? []).map((p) => (
-            <PartnerCard key={p.id} partner={p as unknown as Partner} />
-          ))}
-        </div>
       </section>
 
-      {/* Recent Activity */}
-      {redemptions && redemptions.length > 0 && (
-        <section>
-          <h2 className="font-semibold mb-3">Recent activity</h2>
-          <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl divide-y divide-[#2A2A2A]">
-            {redemptions.map((r) => {
-              const partner = r.partners as { name?: string } | null
-              const service = r.partner_services as { name?: string } | null
-              return (
-                <div key={r.id} className="px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <div className="text-sm font-medium">{service?.name}</div>
-                    <div className="text-xs text-[#6B7280]">{partner?.name}</div>
-                  </div>
-                  <div className="text-sm text-[#FF6B35] font-medium">
-                    -{r.credits_used} cr
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
+      <p className="pb-2 text-center text-xs text-drift-text-muted">
+        Full explore experience coming in the next design update.
+      </p>
     </div>
   )
 }
@@ -167,37 +133,34 @@ const CATEGORY_EMOJI: Record<string, string> = {
 
 function PartnerCard({ partner }: { partner: Partner }) {
   const services = (partner.services ?? []).filter((s) => s.is_active)
-  const minCredits = services.length > 0
-    ? Math.min(...services.map((s) => s.credit_cost))
-    : null
 
   return (
-    <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-4 partner-card">
+    <div className="rounded-xl border border-drift-border bg-drift-navy-light p-4 partner-card">
       <div className="flex items-start gap-3">
-        <div className="w-10 h-10 bg-[#2A2A2A] rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-drift-navy text-xl">
           {CATEGORY_EMOJI[partner.category] ?? '📍'}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <div className="font-semibold text-sm">{partner.name}</div>
-              <div className="text-xs text-[#6B7280]">{partner.address}</div>
+              <div className="text-sm font-semibold">{partner.name}</div>
+              <div className="text-xs text-drift-text-muted">{partner.address}</div>
             </div>
             {partner.google_rating && (
-              <div className="text-xs text-[#9CA3AF] flex-shrink-0">
+              <div className="flex-shrink-0 text-xs text-drift-text-muted">
                 ⭐ {partner.google_rating}
               </div>
             )}
           </div>
 
           {services.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-2">
+            <div className="mt-2 flex flex-wrap gap-1.5">
               {services.slice(0, 3).map((s) => (
                 <span
                   key={s.id}
-                  className="bg-[#0A0A0A] border border-[#2A2A2A] rounded-full px-2.5 py-0.5 text-xs text-[#9CA3AF]"
+                  className="rounded-full border border-drift-border bg-drift-navy px-2.5 py-0.5 text-xs text-drift-text-muted"
                 >
-                  {s.name} · {s.credit_cost}cr
+                  {s.name}
                 </span>
               ))}
             </div>

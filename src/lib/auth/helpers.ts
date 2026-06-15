@@ -1,5 +1,6 @@
 import { PLAN_BY_SLUG } from '@/constants/plans'
-import { CANONICAL_APP_ORIGIN, canonicalAppUrl } from '@/lib/auth/canonical-url'
+import { CANONICAL_APP_ORIGIN, appUrlAt } from '@/lib/auth/canonical-url'
+import { getClientAppOrigin } from '@/lib/auth/app-origin'
 
 export const AUTH_POST_LOGIN_COOKIE = 'auth_post_login'
 
@@ -72,7 +73,10 @@ export function resolveAuthNext(params: {
 
 /** Supabase Redirect URLs must match exactly — no query params on redirectTo. Post-auth path is stored in auth_post_login cookie. */
 export function getOAuthCallbackUrl(): string {
-  return canonicalAppUrl('/callback')
+  if (typeof window !== 'undefined') {
+    return `${getClientAppOrigin()}/callback`
+  }
+  return appUrlAt(CANONICAL_APP_ORIGIN, '/callback')
 }
 
 export function setAuthPostLoginCookie(destination: string): void {
@@ -92,9 +96,9 @@ export function readAuthPostLoginCookie(cookieHeader: string | null | undefined)
   }
 }
 
-export function buildLoginReturnUrl(returnTo: string): string {
+export function buildLoginReturnUrl(returnTo: string, origin?: string): string {
   const { next, plan } = splitPostAuthDestination(returnTo)
-  return canonicalAppUrl('/login', {
+  return appUrlAt(origin ?? CANONICAL_APP_ORIGIN, '/login', {
     next,
     ...(plan ? { plan } : {}),
   })

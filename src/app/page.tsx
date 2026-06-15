@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { PLANS } from '@/constants/plans'
-import { formatAUD } from '@/lib/utils/format'
+import { MEMBERSHIP_INCLUSIONS, MEMBERSHIP_PLAN } from '@/constants/plans'
 
 // Marketing landing page — Server Component, no auth required
 export default function HomePage() {
@@ -69,9 +68,9 @@ function Hero() {
         </h1>
 
         <p className="text-xl text-[#9CA3AF] max-w-2xl mx-auto mb-10 leading-relaxed">
-          One credit pass. Every city. Gyms, cafés, laundry, co-working,
-          water fills — wherever you roam. Starting from{' '}
-          <span className="text-white font-semibold">A$20 per 2 weeks.</span>
+          One membership. Every city. Gyms, cafés, tours, laundry, and local deals —
+          wherever you roam.{' '}
+          <span className="text-white font-semibold">A$7.99 per week.</span>
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -92,7 +91,7 @@ function Hero() {
         <div className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
           {[
             { value: '4', label: 'Partners live' },
-            { value: 'A$25', label: 'Starting price' },
+            { value: 'A$7.99', label: 'Per week' },
             { value: '6', label: 'Build phases' },
             { value: '∞', label: 'Potential' },
           ].map(({ value, label }) => (
@@ -143,7 +142,7 @@ function HowItWorks() {
     {
       step: '01',
       title: 'Pick your plan',
-      description: 'Choose from Wanderer, Explorer, Nomad, or Van Lifer. Fixed credits every 2 weeks.',
+      description: 'One Drift Pass membership at $7.99 per week. Cancel anytime.',
     },
     {
       step: '02',
@@ -189,62 +188,42 @@ function HowItWorks() {
 function Pricing() {
   return (
     <section id="pricing" className="py-24 px-6 bg-[#0F0F0F]">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-lg mx-auto">
         <h2 className="font-display text-4xl font-bold text-center mb-4">
-          One pass. All the access.
+          One membership. All the access.
         </h2>
-        <p className="text-[#9CA3AF] text-center mb-16">
-          Cancel anytime. Credits reset every 2 weeks. No lock-in.
+        <p className="text-[#9CA3AF] text-center mb-12">
+          A$7.99 per week. Cancel anytime. No lock-in.
         </p>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.slug}
-              className={`relative bg-[#1A1A1A] border rounded-xl p-6 flex flex-col ${
-                plan.is_popular
-                  ? 'border-[#00FF7F]'
-                  : 'border-[#2A2A2A]'
-              }`}
-            >
-              {plan.is_popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#00FF7F] text-[#0A0A0A] text-xs font-bold px-3 py-1 rounded-full">
-                  MOST POPULAR
-                </div>
-              )}
+        <div className="relative bg-gradient-to-br from-[#E8C872] via-[#F5D78E] to-[#C9A227] rounded-3xl p-8 text-[#0D1B2A] shadow-2xl">
+          <div className="absolute right-4 top-4 rounded-full bg-[#0D1B2A]/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#F5D78E]">
+            ★ Popular
+          </div>
 
-              <div className="mb-4">
-                <h3 className="font-bold text-lg mb-1">{plan.name}</h3>
-                <div className="text-3xl font-bold">
-                  {formatAUD(plan.price_aud_cents)}
-                  <span className="text-sm text-[#6B7280] font-normal">/ 2 wks</span>
-                </div>
-                <div className="text-sm text-[#6B7280] mt-1">
-                  {plan.credits_per_month} credits / 2 weeks
-                </div>
-              </div>
+          <h3 className="text-xl font-bold pr-16">{MEMBERSHIP_PLAN.name}</h3>
+          <p className="mt-1 text-sm opacity-75">One membership for the traveller lifestyle</p>
 
-              <ul className="space-y-2 flex-1 mb-6">
-                {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-[#9CA3AF]">
-                    <span className="text-[#00FF7F] mt-0.5 flex-shrink-0">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
+          <div className="mt-6 flex items-end gap-1">
+            <span className="text-5xl font-bold">$7.99</span>
+            <span className="mb-1 text-lg opacity-70">/week</span>
+          </div>
 
-              <Link
-                href={`/login?next=/pricing&plan=${plan.slug}`}
-                className={`w-full text-center py-3 rounded-lg font-semibold text-sm transition-colors ${
-                  plan.is_popular
-                    ? 'bg-[#00FF7F] text-[#0A0A0A] hover:bg-[#00E070]'
-                    : 'border border-[#2A2A2A] text-white hover:border-[#00FF7F] hover:text-[#00FF7F]'
-                }`}
-              >
-                Get {plan.name}
-              </Link>
-            </div>
-          ))}
+          <ul className="mt-6 space-y-2">
+            {MEMBERSHIP_INCLUSIONS.map((f) => (
+              <li key={f} className="flex items-start gap-2 text-sm">
+                <span className="mt-0.5 opacity-70">✓</span>
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          <Link
+            href="/pricing"
+            className="mt-8 block w-full rounded-2xl bg-[#C9A227]/40 py-4 text-center text-base font-bold transition-colors hover:bg-[#C9A227]/55"
+          >
+            Start Membership
+          </Link>
         </div>
       </div>
     </section>
