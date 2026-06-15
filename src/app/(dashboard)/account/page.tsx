@@ -3,26 +3,26 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
 import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
-import { formatDate, formatAUD } from '@/lib/utils/format'
-import { getCreditBalance } from '@/lib/credits/engine'
+import { formatDate } from '@/lib/utils/format'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import {
   activateCheckoutSession,
   syncStripeSubscriptionForUser,
 } from '@/lib/stripe/activation'
+import { computeProfileStats, formatMemberSince } from '@/lib/profile/stats'
+import {
+  LifetimeSavingsCard,
+  ProfileAvatar,
+  ProfileMenu,
+  ProfileStatsRow,
+} from '@/components/profile'
+import { StatusPill } from '@/components/ui/StatusPill'
 import Link from 'next/link'
-import { ManageBillingButton } from './ManageBillingButton'
 
 export const dynamic = 'force-dynamic'
 
 function isCheckoutSessionId(value: string | undefined): boolean {
   return Boolean(value && value.startsWith('cs_') && !value.includes('{'))
-}
-
-function formatPlanPrice(slug: string | undefined, priceAudCents: number | undefined): string {
-  if (!priceAudCents) return '—'
-  if (slug === 'membership') return `${formatAUD(priceAudCents)} / week`
-  return `${formatAUD(priceAudCents)} / 2 weeks`
 }
 
 export default async function AccountPage({
@@ -31,7 +31,9 @@ export default async function AccountPage({
   searchParams: { subscribed?: string; session_id?: string }
 }) {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   const appOrigin = await getServerAppOrigin()
   if (!user) redirect(appUrlAt(appOrigin, '/login', { next: '/account' }))
 
@@ -58,164 +60,157 @@ export default async function AccountPage({
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('full_name, email, traveller_type, created_at')
+    .select('full_name, email, avatar_url, traveller_type, created_at')
     .eq('id', user.id)
     .single()
 
   const { data: sub } = await admin
     .from('subscriptions')
-    .select('status, cancel_at_period_end, current_period_end, created_at, plans(slug, name, price_aud_cents, credits_per_month)')
+    .select('status, cancel_at_period_end, current_period_end, created_at, plans(name)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
-  const plan = sub?.plans as {
-    slug?: string
-    name?: string
-    price_aud_cents?: number
-    credits_per_month?: number
-  } | null
   const hasActivePass = isPassActive(sub?.status)
-  const balance = hasActivePass && (plan?.credits_per_month ?? 0) > 0
-    ? await getCreditBalance(user.id)
-    : null
 
   if (justSubscribed && hasActivePass) {
     redirect('/pass')
   }
 
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold">My Account</h1>
-        <p className="text-sm text-[#6B7280] mt-1">{profile?.email ?? user.email}</p>
-      </div>
+  const memberName = profile?.full_name ?? user.email?.split('@')[0] ?? 'Member'
+  const memberSince = sub?.created_at ?? profile?.created_at ?? null
+  const memberSinceLabel = formatMemberSince(memberSince)
 
+  const { data: redemptions } = hasActivePass
+    ? await admin
+        .from('redemptions')
+        .select('id, partners(city)')
+        .eq('user_id', user.id)
+        .eq('status', 'confirmed')
+    : { data: [] }
+
+  const stats = computeProfileStats(memberSince, redemptions ?? [])
+
+  return (
+    <div className="space-y-6 animate-fade-in pb-4">
       {justSubscribed && hasActivePass && (
-        <div className="bg-[#00FF7F]/10 border border-[#00FF7F]/30 rounded-xl px-4 py-3 text-sm text-[#00FF7F]">
+        <div className="rounded-2xl border border-drift-gold-to/30 bg-drift-gold-gradient/15 px-4 py-3 text-sm text-drift-gold-mid">
           Membership active — open My Pass to get your PIN.
         </div>
       )}
 
       {justSubscribed && !hasActivePass && (
-        <div className="bg-amber-900/20 border border-amber-800/50 rounded-xl px-4 py-3 text-sm text-amber-300">
+        <div className="rounded-2xl border border-amber-800/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
           Finishing activation… refresh in a few seconds, or open My Pass.
         </div>
       )}
 
-      {hasActivePass ? (
-        <div className="bg-gradient-to-br from-[#1A1A1A] to-[#0F0F0F] border border-[#00FF7F]/40 rounded-2xl p-6">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div>
-              <div className="text-xs text-[#6B7280] uppercase tracking-wide mb-1">Your membership</div>
-              {balance ? (
-                <>
-                  <div className="text-3xl font-bold text-[#00FF7F]">
-                    {balance.remaining_credits}
-                    <span className="text-base text-[#6B7280] font-normal"> credits</span>
-                  </div>
-                  <div className="text-sm text-[#9CA3AF] mt-1">{plan?.name ?? 'DriftPass'}</div>
-                </>
-              ) : (
-                <>
-                  <div className="text-2xl font-bold text-[#00FF7F]">
-                    {plan?.name ?? 'Drift Pass Membership'}
-                  </div>
-                  <div className="text-sm text-[#9CA3AF] mt-1">Active member · A$7.99/week</div>
-                </>
-              )}
+      <section className="pt-2 text-center">
+        <ProfileAvatar name={memberName} avatarUrl={profile?.avatar_url} />
+
+        <h1 className="mt-4 text-2xl font-bold">{memberName}</h1>
+
+        {hasActivePass ? (
+          <>
+            <div className="mt-3 flex justify-center">
+              <StatusPill
+                label="Active Member"
+                tone="neutral"
+                className="border-drift-gold-to/40 bg-drift-gold-gradient/15 text-drift-gold-mid [&_span]:bg-drift-gold-mid"
+              />
             </div>
-            <Link
-              href="/pass"
-              className="shrink-0 bg-[#00FF7F] text-[#0A0A0A] px-5 py-3 rounded-xl font-bold hover:bg-[#00E070] transition-colors"
-            >
-              Open My Pass →
-            </Link>
-          </div>
-          {balance && (
-            <p className="text-xs text-[#6B7280]">
-              Resets {formatDate(balance.period_end)} · {balance.used_credits} credits used this period
-            </p>
-          )}
-        </div>
+            {memberSinceLabel ? (
+              <p className="mt-2 text-sm text-drift-text-muted">Member since {memberSinceLabel}</p>
+            ) : null}
+          </>
+        ) : (
+          <p className="mt-2 text-sm text-drift-text-muted">{profile?.email ?? user.email}</p>
+        )}
+      </section>
+
+      {hasActivePass ? (
+        <>
+          <LifetimeSavingsCard amountCents={stats.lifetimeSavingsCents} />
+
+          <ProfileStatsRow
+            stats={[
+              { value: String(stats.dealsClaimed), label: 'Deals Claimed' },
+              { value: String(stats.citiesVisited), label: 'Cities Visited' },
+              { value: String(stats.daysTraveling), label: 'Days Traveling' },
+            ]}
+          />
+
+          {sub?.cancel_at_period_end && sub.current_period_end ? (
+            <div className="rounded-2xl border border-yellow-800/60 bg-yellow-900/20 px-4 py-3 text-sm text-yellow-300">
+              Your membership ends on {formatDate(sub.current_period_end)}. Manage billing below
+              to keep your pass active.
+            </div>
+          ) : null}
+
+          <ProfileMenu showBilling />
+
+          <Link
+            href="/pass"
+            className="flex w-full items-center justify-center rounded-2xl border border-drift-border bg-drift-navy-light px-6 py-3.5 text-sm font-semibold text-white transition-colors hover:border-drift-gold-to/40 hover:text-drift-gold-mid"
+          >
+            Open My Pass
+          </Link>
+        </>
       ) : (
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-6 text-center">
+        <div className="rounded-3xl border border-drift-border/60 bg-drift-navy-light px-6 py-8 text-center">
           <div className="text-4xl mb-3">🎫</div>
-          <h2 className="font-bold mb-2">Membership not active yet</h2>
-          <p className="text-sm text-[#9CA3AF] mb-5">
+          <h2 className="font-bold">Membership not active yet</h2>
+          <p className="mt-2 text-sm text-drift-text-muted">
             {justSubscribed
               ? 'Payment received — we are syncing your pass now.'
               : 'Start your Drift Pass membership to unlock your PIN and member perks.'}
           </p>
-          {!justSubscribed && (
+          {!justSubscribed ? (
             <Link
               href="/pricing"
-              className="inline-block bg-[#00FF7F] text-[#0A0A0A] px-8 py-3 rounded-xl font-bold hover:bg-[#00E070] transition-colors"
+              className="mt-5 inline-flex rounded-2xl bg-drift-gold-gradient px-6 py-3 text-sm font-bold text-drift-navy-deep shadow-drift-card transition-all hover:brightness-105"
             >
-              Start membership →
+              Start membership
             </Link>
-          )}
+          ) : null}
         </div>
       )}
 
-      <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-5 space-y-3">
-        <h2 className="font-semibold text-sm text-[#9CA3AF] uppercase tracking-wide">Profile</h2>
-        <div className="space-y-2">
-          <Row label="Name" value={profile?.full_name ?? '—'} />
-          <Row label="Email" value={profile?.email ?? user.email ?? '—'} />
-          <Row label="Traveller type" value={profile?.traveller_type?.replace('_', ' ') ?? '—'} />
-          <Row label="Member since" value={profile?.created_at ? formatDate(profile.created_at) : '—'} />
-        </div>
-      </div>
-
-      {hasActivePass && sub && (
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-5 space-y-3">
-          <h2 className="font-semibold text-sm text-[#9CA3AF] uppercase tracking-wide">Billing</h2>
-          <div className="space-y-2">
-            <Row label="Plan" value={plan?.name ?? '—'} />
-            <Row
-              label="Price"
-              value={formatPlanPrice(plan?.slug, plan?.price_aud_cents)}
-            />
-            <Row
-              label="Status"
-              value={
-                sub.cancel_at_period_end
-                  ? `Cancels ${formatDate(sub.current_period_end)}`
-                  : sub.status
-              }
-              highlight={!sub.cancel_at_period_end}
-            />
-            <Row label="Next billing" value={sub.current_period_end ? formatDate(sub.current_period_end) : '—'} />
+      <details className="rounded-2xl border border-drift-border/60 bg-drift-navy-light px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium text-drift-text-muted">
+          Account details
+        </summary>
+        <dl className="mt-3 space-y-2 text-sm">
+          <div className="flex justify-between gap-4">
+            <dt className="text-drift-text-muted">Email</dt>
+            <dd className="text-right text-white">{profile?.email ?? user.email ?? '—'}</dd>
           </div>
-          <ManageBillingButton />
-        </div>
-      )}
+          <div className="flex justify-between gap-4">
+            <dt className="text-drift-text-muted">Traveller type</dt>
+            <dd className="text-right capitalize text-white">
+              {profile?.traveller_type?.replace('_', ' ') ?? '—'}
+            </dd>
+          </div>
+          {hasActivePass && sub ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-drift-text-muted">Next billing</dt>
+              <dd className="text-right text-white">
+                {sub.current_period_end ? formatDate(sub.current_period_end) : '—'}
+              </dd>
+            </div>
+          ) : null}
+        </dl>
+      </details>
 
-      <SignOutButton />
+      <form action="/api/auth/signout" method="POST">
+        <button
+          type="submit"
+          className="w-full rounded-2xl border border-drift-border py-3 text-sm text-drift-text-muted transition-colors hover:border-red-800/60 hover:text-red-400"
+        >
+          Sign out
+        </button>
+      </form>
     </div>
-  )
-}
-
-function Row({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <div className="flex justify-between items-center text-sm">
-      <span className="text-[#6B7280]">{label}</span>
-      <span className={highlight ? 'text-[#00FF7F] font-medium capitalize' : 'text-white capitalize'}>{value}</span>
-    </div>
-  )
-}
-
-function SignOutButton() {
-  return (
-    <form action="/api/auth/signout" method="POST">
-      <button
-        type="submit"
-        className="w-full border border-[#2A2A2A] text-[#6B7280] py-2.5 rounded-lg text-sm hover:border-red-800 hover:text-red-400 transition-colors"
-      >
-        Sign out
-      </button>
-    </form>
   )
 }
