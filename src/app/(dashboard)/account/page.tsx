@@ -12,7 +12,7 @@ import {
 import { computeProfileStats, formatMemberSince } from '@/lib/profile/stats'
 import {
   LifetimeSavingsCard,
-  ProfileAvatar,
+  ProfileAvatarEditor,
   ProfileMenu,
   ProfileStatsRow,
 } from '@/components/profile'
@@ -107,7 +107,7 @@ export default async function AccountPage({
       )}
 
       <section className="pt-2 text-center">
-        <ProfileAvatar name={memberName} avatarUrl={profile?.avatar_url} />
+        <ProfileAvatarEditor name={memberName} avatarUrl={profile?.avatar_url} />
 
         <h1 className="mt-4 text-2xl font-bold">{memberName}</h1>
 

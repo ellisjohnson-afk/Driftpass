@@ -29,5 +29,5 @@ export default async function DashboardPage() {
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  redirect(appUrlAt(appOrigin, '/perks'))
+  redirect(appUrlAt(appOrigin, '/home'))
 }

@@ -39,7 +39,7 @@ export function AppShell({
   passHref = '/pass',
   tripsHref = '/trip-help',
   profileHref = '/account',
-  homeHref = '/dashboard',
+  homeHref = '/home',
   className,
 }: AppShellProps) {
   return (

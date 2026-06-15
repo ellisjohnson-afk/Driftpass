@@ -72,7 +72,7 @@ export default async function DashboardLayout({
         passHref="/pass"
         tripsHref="/trip-help"
         profileHref="/account"
-        homeHref={hasActivePass ? '/perks' : '/account'}
+        homeHref={hasActivePass ? '/home' : '/account'}
       >
         {children}
       </AppShell>
