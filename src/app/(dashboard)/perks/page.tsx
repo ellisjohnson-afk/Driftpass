@@ -31,7 +31,7 @@ export default async function PerksPage() {
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  const { data: partners } = await supabase
+  const { data: partners } = await admin
     .from('partners')
     .select(
       'id, name, slug, category, city, is_featured, partner_services(service_type, is_active)'

@@ -45,7 +45,7 @@ export default async function PartnerDetailPage({
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  const { data: partner } = await supabase
+  const { data: partner } = await admin
     .from('partners')
     .select(
       'id, name, slug, description, category, address, city, state, google_rating, partner_services(name, service_type, is_active)'
