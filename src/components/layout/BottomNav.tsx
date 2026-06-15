@@ -89,7 +89,7 @@ export function BottomNav({
           href={exploreHref}
           className={cn(
             'mb-3 flex min-w-[4rem] flex-col items-center gap-1 text-[10px] font-medium uppercase tracking-wide transition-colors',
-            active === 'explore' ? 'text-drift-teal' : 'text-drift-text-muted hover:text-white'
+            active === 'explore' ? 'text-drift-gold-mid' : 'text-drift-text-muted hover:text-white'
           )}
           aria-current={active === 'explore' ? 'page' : undefined}
         >
@@ -100,8 +100,8 @@ export function BottomNav({
         <Link
           href={passHref}
           className={cn(
-            'absolute left-1/2 top-0 flex h-[4.25rem] w-[4.25rem] -translate-x-1/2 -translate-y-4 items-center justify-center rounded-full bg-drift-teal text-drift-navy-deep shadow-drift-fab transition-transform hover:scale-105',
-            active === 'pass' && 'ring-2 ring-drift-teal/40'
+            'absolute left-1/2 top-0 flex h-[4.25rem] w-[4.25rem] -translate-x-1/2 -translate-y-4 items-center justify-center rounded-full bg-drift-gold-gradient text-drift-navy-deep shadow-drift-fab transition-transform hover:scale-105',
+            active === 'pass' && 'ring-2 ring-drift-gold-to/50'
           )}
           aria-label="Show my pass"
           aria-current={active === 'pass' ? 'page' : undefined}
@@ -113,7 +113,7 @@ export function BottomNav({
           href={tripsHref}
           className={cn(
             'mb-3 flex min-w-[4rem] flex-col items-center gap-1 text-[10px] font-medium uppercase tracking-wide transition-colors',
-            active === 'trips' ? 'text-drift-teal' : 'text-drift-text-muted hover:text-white'
+            active === 'trips' ? 'text-drift-gold-mid' : 'text-drift-text-muted hover:text-white'
           )}
           aria-current={active === 'trips' ? 'page' : undefined}
         >

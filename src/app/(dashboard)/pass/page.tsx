@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
+import { MembershipCard, PassPerkCategories, PinDisplay } from '@/components/pass'
+import { cn } from '@/lib/utils/cn'
 
 const FETCH_TIMEOUT_MS = 15_000
 
 type PassPayload = {
-  qrDataUrl?: string
   pin?: string
   pinExpiresIn?: number
   planName?: string
@@ -28,28 +28,55 @@ async function fetchPassToken(): Promise<{ ok: boolean; status: number; data: Pa
   }
 }
 
+function BackIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+      <path d="M15 18 9 12l6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+function PassPageHeader() {
+  return (
+    <header className="mb-6 flex items-center gap-3">
+      <Link
+        href="/dashboard"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-drift-border bg-drift-navy-light text-white transition-colors hover:border-drift-gold-to hover:text-drift-gold-mid"
+        aria-label="Back to explore"
+      >
+        <BackIcon />
+      </Link>
+      <h1 className="text-xl font-bold tracking-tight">My Pass</h1>
+    </header>
+  )
+}
+
 function PassSkeleton() {
   return (
-    <div className="w-full max-w-sm animate-pulse">
-      <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-3xl p-6">
-        <div className="flex justify-between mb-6">
-          <div className="space-y-2">
-            <div className="h-6 w-28 bg-[#2A2A2A] rounded" />
-            <div className="h-3 w-36 bg-[#2A2A2A] rounded" />
-          </div>
+    <div className="animate-pulse space-y-6">
+      <div className="h-10 w-40 rounded-xl bg-drift-navy-light" />
+      <div className="rounded-4xl bg-drift-gold-gradient/40 p-8">
+        <div className="mx-auto h-4 w-24 rounded bg-drift-navy-deep/20" />
+        <div className="mx-auto mt-6 h-8 w-40 rounded bg-drift-navy-deep/20" />
+        <div className="mx-auto mt-4 h-6 w-28 rounded bg-drift-navy-deep/15" />
+        <div className="mt-8 flex justify-center gap-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-12 w-11 rounded-2xl bg-drift-navy-deep/15" />
+          ))}
         </div>
-        <div className="bg-[#2A2A2A] rounded-2xl aspect-square mb-4" />
-        <div className="h-20 bg-[#0A0A0A] rounded-2xl" />
       </div>
-      <p className="text-center text-[#6B7280] text-sm mt-6">Loading your pass…</p>
+      <div className="grid grid-cols-4 gap-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-20 rounded-2xl bg-drift-navy-light" />
+        ))}
+      </div>
+      <div className="h-16 rounded-2xl bg-drift-gold-gradient/30" />
     </div>
   )
 }
 
 export default function PassPage() {
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
   const [pin, setPin] = useState<string | null>(null)
-  const [planName, setPlanName] = useState<string>('')
   const [userName, setUserName] = useState<string>('')
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -69,16 +96,14 @@ export default function PassPage() {
           return
         }
         if (status === 403) {
-          setError('You need an active pass to view this page.')
+          setError('You need an active membership to view your pass.')
           return
         }
         setError(data.error ?? 'Could not load your pass. Try again.')
         return
       }
 
-      if (data.qrDataUrl) setQrDataUrl(data.qrDataUrl)
       if (data.pin) setPin(data.pin)
-      if (data.planName) setPlanName(data.planName)
       if (data.userName) setUserName(data.userName)
       setSecondsLeft(Math.ceil((data.pinExpiresIn ?? 60_000) / 1000))
     } catch {
@@ -108,7 +133,8 @@ export default function PassPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+      <div className="animate-fade-in">
+        <PassPageHeader />
         <PassSkeleton />
       </div>
     )
@@ -116,13 +142,14 @@ export default function PassPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8 max-w-sm w-full">
-          <p className="text-[#9CA3AF] mb-6">{error}</p>
-          {error.includes('active pass') ? (
+      <div className="animate-fade-in">
+        <PassPageHeader />
+        <div className="rounded-2xl border border-drift-border bg-drift-navy-light p-8 text-center">
+          <p className="mb-6 text-sm text-drift-text-muted">{error}</p>
+          {error.includes('active membership') ? (
             <Link
               href="/pricing"
-              className="inline-block bg-[#00FF7F] text-[#0A0A0A] px-6 py-3 rounded-lg font-bold"
+              className="inline-flex rounded-2xl bg-drift-gold-gradient px-6 py-3 text-sm font-bold text-drift-navy-deep shadow-drift-card transition-all hover:brightness-105"
             >
               Get membership
             </Link>
@@ -133,7 +160,7 @@ export default function PassPage() {
                 setLoading(true)
                 void loadPass()
               }}
-              className="bg-[#00FF7F] text-[#0A0A0A] px-6 py-3 rounded-lg font-bold"
+              className="rounded-2xl bg-drift-gold-gradient px-6 py-3 text-sm font-bold text-drift-navy-deep shadow-drift-card transition-all hover:brightness-105"
             >
               Retry
             </button>
@@ -144,70 +171,26 @@ export default function PassPage() {
   }
 
   return (
-    <div className="flex flex-col items-center py-4 animate-fade-in">
-      <div className="w-full max-w-sm bg-gradient-to-br from-[#1A1A1A] to-[#0F0F0F] border border-[#2A2A2A] rounded-3xl p-6 shadow-2xl">
-        <div className="mb-6">
-          <div className="font-display text-xl font-bold">
-            <span className="text-white">Drift</span>
-            <span className="text-[#00FF7F]">Pass</span>
-          </div>
-          <div className="text-xs text-[#6B7280] mt-0.5">{planName}</div>
-        </div>
+    <div className="animate-fade-in space-y-6">
+      <PassPageHeader />
 
-        <div className="bg-white rounded-2xl p-4 flex items-center justify-center aspect-square relative">
-          {qrDataUrl ? (
-            <Image
-              src={qrDataUrl}
-              alt="Your DriftPass QR Code"
-              width={260}
-              height={260}
-              className="rounded-xl"
-              priority
-            />
-          ) : (
-            <div className="w-[260px] h-[260px] bg-[#F5F5F5] rounded-xl animate-pulse" />
-          )}
-          {refreshing && (
-            <div className="absolute inset-0 bg-white/80 rounded-2xl flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-[#00FF7F] border-t-transparent rounded-full animate-spin" />
-            </div>
-          )}
-        </div>
+      <MembershipCard variant="full" memberName={userName || 'Member'}>
+        <PinDisplay pin={pin} secondsLeft={secondsLeft} loading={refreshing} />
+      </MembershipCard>
 
-        <div className="mt-4 bg-[#0A0A0A] rounded-2xl p-4 text-center">
-          <div className="text-xs text-[#6B7280] uppercase tracking-widest mb-1">Partner PIN</div>
-          <div className="text-4xl font-mono font-bold tracking-[0.3em] text-[#00FF7F]">
-            {pin ? `${pin.slice(0, 3)} ${pin.slice(3)}` : '------'}
-          </div>
-          <div className="text-xs text-[#6B7280] mt-1">Refreshes in {secondsLeft}s</div>
-        </div>
+      <PassPerkCategories />
 
-        <div className="mt-3 flex items-center justify-between">
-          <div>
-            <div className="text-sm font-medium">{userName}</div>
-            <div className="text-xs text-[#6B7280]">DriftPass Member</div>
-          </div>
-          <div className="text-xs text-[#6B7280]">Show PIN to staff</div>
-        </div>
-      </div>
-
-      <div className="mt-6 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-4 w-full max-w-sm">
-        <h3 className="font-semibold text-sm mb-3">How to use your pass</h3>
-        <ol className="space-y-2 text-sm text-[#9CA3AF]">
-          <li className="flex gap-2">
-            <span className="text-[#00FF7F] font-bold flex-shrink-0">1.</span>
-            Tell staff your 6-digit PIN or show this QR code
-          </li>
-          <li className="flex gap-2">
-            <span className="text-[#00FF7F] font-bold flex-shrink-0">2.</span>
-            They enter it at the partner terminal
-          </li>
-          <li className="flex gap-2">
-            <span className="text-[#00FF7F] font-bold flex-shrink-0">3.</span>
-            Your membership is verified — enjoy member perks
-          </li>
-        </ol>
-      </div>
+      <Link
+        href="/dashboard"
+        className={cn(
+          'flex w-full flex-col items-center rounded-2xl bg-drift-gold-gradient px-6 py-4 text-center shadow-drift-card transition-all hover:brightness-105'
+        )}
+      >
+        <span className="text-base font-bold text-drift-navy-deep">Browse Deals</span>
+        <span className="mt-0.5 text-xs text-drift-navy-deep/75">
+          Gyms · Coffee · Tours · Activities
+        </span>
+      </Link>
     </div>
   )
 }

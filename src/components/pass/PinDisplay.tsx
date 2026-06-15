@@ -24,7 +24,7 @@ function normalizePin(pin: string | null): string[] {
 
 function PinDigit({ digit }: { digit: string }) {
   return (
-    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-drift-gold-mid/50 text-xl font-bold text-drift-navy-deep shadow-inner sm:h-14 sm:w-14 sm:text-2xl">
+    <div className="flex h-12 w-11 items-center justify-center rounded-2xl bg-drift-navy-deep/15 text-xl font-bold text-drift-navy-deep shadow-inner sm:h-14 sm:w-12 sm:text-2xl">
       {digit}
     </div>
   )
@@ -42,7 +42,7 @@ export function PinDisplay({ pin, secondsLeft, loading = false, className }: Pin
       </div>
 
       <p className="mt-5 text-center text-xs text-drift-navy-deep/70">
-        <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-drift-teal-dark" />
+        <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-drift-navy-deep/40" />
         Code refreshes in {formatCountdown(secondsLeft)}
       </p>
     </div>

@@ -19,6 +19,7 @@ export default async function DashboardLayout({
 
   const pathname = (await headers()).get('x-pathname') ?? '/account'
   const isPublicPricing = pathname === '/pricing'
+  const isPassPage = pathname === '/pass'
 
   if (!user && !isPublicPricing) {
     redirect(appUrlAt(appOrigin, '/login', { next: pathname }))
@@ -26,7 +27,7 @@ export default async function DashboardLayout({
 
   if (!user) {
     return (
-      <AppShell showBottomNav={false}>
+      <AppShell showBottomNav={false} showHeader={false}>
         {children}
       </AppShell>
     )
@@ -42,7 +43,7 @@ export default async function DashboardLayout({
 
   const hasActivePass = Boolean(sub)
 
-  const activateBanner = !hasActivePass ? (
+  const activateBanner = !hasActivePass && !isPassPage ? (
     <div className="border-b border-drift-teal/20 bg-drift-teal/10 px-4 py-3">
       <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
         <p className="text-sm text-drift-teal">
@@ -62,6 +63,7 @@ export default async function DashboardLayout({
     <>
       {activateBanner}
       <AppShell
+        showHeader={!isPassPage}
         showBottomNav
         exploreHref="/dashboard"
         passHref="/pass"

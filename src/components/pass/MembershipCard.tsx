@@ -58,7 +58,7 @@ export function MembershipCard({
         <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-drift-navy-deep/80">
           {isActive && (
             <span className="inline-flex items-center gap-1.5 font-medium">
-              <span className="h-1.5 w-1.5 rounded-full bg-drift-teal-dark" />
+              <span className="h-1.5 w-1.5 rounded-full bg-drift-gold-dark" />
               Active Member
             </span>
           )}
@@ -89,8 +89,8 @@ export function MembershipCard({
       <div className="mt-3 flex justify-center">
         <StatusPill
           label="Active Member"
-          tone="active"
-          className="border-drift-teal-dark/20 bg-drift-teal/10 text-drift-navy-deep"
+          tone="neutral"
+          className="border-drift-gold-to/40 bg-drift-navy-deep/10 text-drift-navy-deep [&_span]:bg-drift-navy-deep/50"
         />
       </div>
 

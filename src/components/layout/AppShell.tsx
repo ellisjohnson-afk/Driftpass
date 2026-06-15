@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils/cn'
 
 export interface AppShellProps {
   children: ReactNode
+  showHeader?: boolean
   showBottomNav?: boolean
   exploreHref?: string
   passHref?: string
@@ -32,6 +33,7 @@ function SettingsGearIcon() {
 
 export function AppShell({
   children,
+  showHeader = true,
   showBottomNav = true,
   exploreHref = '/dashboard',
   passHref = '/pass',
@@ -42,22 +44,24 @@ export function AppShell({
 }: AppShellProps) {
   return (
     <div className={cn('min-h-screen bg-drift-navy-gradient text-white', className)}>
-      <header className="sticky top-0 z-40 border-b border-drift-border/60 bg-drift-navy/90 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
-          <Link href={homeHref} className="text-lg font-bold tracking-tight">
-            <span className="text-white">Drift</span>
-            <span className="text-drift-teal">Pass</span>
-          </Link>
+      {showHeader && (
+        <header className="sticky top-0 z-40 border-b border-drift-border/60 bg-drift-navy/90 backdrop-blur-md">
+          <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+            <Link href={homeHref} className="text-lg font-bold tracking-tight">
+              <span className="text-white">Drift</span>
+              <span className="text-drift-teal">Pass</span>
+            </Link>
 
-          <Link
-            href={profileHref}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-drift-border bg-drift-navy-light text-drift-text-muted transition-colors hover:border-drift-teal hover:text-drift-teal"
-            aria-label="Profile settings"
-          >
-            <SettingsGearIcon />
-          </Link>
-        </div>
-      </header>
+            <Link
+              href={profileHref}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-drift-border bg-drift-navy-light text-drift-text-muted transition-colors hover:border-drift-teal hover:text-drift-teal"
+              aria-label="Profile settings"
+            >
+              <SettingsGearIcon />
+            </Link>
+          </div>
+        </header>
+      )}
 
       <main className={cn('mx-auto max-w-lg px-4 py-6', showBottomNav && 'pb-28')}>
         {children}
