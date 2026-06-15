@@ -17,7 +17,7 @@ type PricingClientProps = {
 
 export default function PricingClient({
   initialPlan = null,
-  backHref = '/dashboard',
+  backHref = '/perks',
   isAuthenticated = true,
 }: PricingClientProps) {
   const [loading, setLoading] = useState(false)

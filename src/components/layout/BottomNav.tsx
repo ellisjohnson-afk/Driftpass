@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils/cn'
 export type BottomNavTab = 'explore' | 'pass' | 'trips'
 
 export interface BottomNavProps {
-  /** Until /perks ships, callers may point explore at /dashboard */
   exploreHref?: string
   passHref?: string
   /** Until /trip-help ships, callers may point trips at /dashboard */
@@ -68,7 +67,7 @@ function resolveActiveTab(pathname: string): BottomNavTab | null {
 }
 
 export function BottomNav({
-  exploreHref = '/dashboard',
+  exploreHref = '/perks',
   passHref = '/pass',
   tripsHref = '/dashboard',
   className,

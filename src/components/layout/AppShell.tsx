@@ -35,7 +35,7 @@ export function AppShell({
   children,
   showHeader = true,
   showBottomNav = true,
-  exploreHref = '/dashboard',
+  exploreHref = '/perks',
   passHref = '/pass',
   tripsHref = '/dashboard',
   profileHref = '/account',

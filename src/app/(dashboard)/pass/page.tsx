@@ -40,7 +40,7 @@ function PassPageHeader() {
   return (
     <header className="mb-6 flex items-center gap-3">
       <Link
-        href="/dashboard"
+        href="/perks"
         className="flex h-10 w-10 items-center justify-center rounded-full border border-drift-border bg-drift-navy-light text-white transition-colors hover:border-drift-gold-to hover:text-drift-gold-mid"
         aria-label="Back to explore"
       >
@@ -181,7 +181,7 @@ export default function PassPage() {
       <PassPerkCategories />
 
       <Link
-        href="/dashboard"
+        href="/perks"
         className={cn(
           'flex w-full flex-col items-center rounded-2xl bg-drift-gold-gradient px-6 py-4 text-center shadow-drift-card transition-all hover:brightness-105'
         )}

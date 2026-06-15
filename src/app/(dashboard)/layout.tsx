@@ -20,6 +20,7 @@ export default async function DashboardLayout({
   const pathname = (await headers()).get('x-pathname') ?? '/account'
   const isPublicPricing = pathname === '/pricing'
   const isPassPage = pathname === '/pass'
+  const isPerksPage = pathname === '/perks' || pathname.startsWith('/perks/')
 
   if (!user && !isPublicPricing) {
     redirect(appUrlAt(appOrigin, '/login', { next: pathname }))
@@ -63,13 +64,13 @@ export default async function DashboardLayout({
     <>
       {activateBanner}
       <AppShell
-        showHeader={!isPassPage}
+        showHeader={!isPassPage && !isPerksPage}
         showBottomNav
-        exploreHref="/dashboard"
+        exploreHref="/perks"
         passHref="/pass"
         tripsHref="/dashboard"
         profileHref="/account"
-        homeHref={hasActivePass ? '/dashboard' : '/account'}
+        homeHref={hasActivePass ? '/perks' : '/account'}
       >
         {children}
       </AppShell>

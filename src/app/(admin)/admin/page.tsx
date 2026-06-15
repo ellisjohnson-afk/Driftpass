@@ -15,7 +15,7 @@ export default async function AdminPage() {
     .eq('id', user.id)
     .single()
 
-  if (!profile?.is_admin) redirect('/dashboard')
+  if (!profile?.is_admin) redirect('/perks')
 
   // Stats
   const [
