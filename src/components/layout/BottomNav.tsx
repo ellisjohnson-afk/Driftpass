@@ -69,7 +69,7 @@ function resolveActiveTab(pathname: string): BottomNavTab | null {
 export function BottomNav({
   exploreHref = '/perks',
   passHref = '/pass',
-  tripsHref = '/dashboard',
+  tripsHref = '/trip-help',
   className,
 }: BottomNavProps) {
   const pathname = usePathname()

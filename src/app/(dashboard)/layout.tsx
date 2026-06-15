@@ -21,6 +21,7 @@ export default async function DashboardLayout({
   const isPublicPricing = pathname === '/pricing'
   const isPassPage = pathname === '/pass'
   const isPerksPage = pathname === '/perks' || pathname.startsWith('/perks/')
+  const isTripHelpPage = pathname === '/trip-help' || pathname.startsWith('/trip-help/')
   const isAccountPage = pathname === '/account'
 
   if (!user && !isPublicPricing) {
@@ -65,11 +66,11 @@ export default async function DashboardLayout({
     <>
       {activateBanner}
       <AppShell
-        showHeader={!isPassPage && !isPerksPage && !isAccountPage}
+        showHeader={!isPassPage && !isPerksPage && !isTripHelpPage && !isAccountPage}
         showBottomNav
         exploreHref="/perks"
         passHref="/pass"
-        tripsHref="/dashboard"
+        tripsHref="/trip-help"
         profileHref="/account"
         homeHref={hasActivePass ? '/perks' : '/account'}
       >
