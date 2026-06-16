@@ -6,9 +6,19 @@ import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getTripUtility } from '@/lib/trip-help/constants'
+import { resolvePartnerOpeningHours } from '@/lib/partners/detail'
+import { fetchPartnerBySlug } from '@/lib/partners/fetch'
 import { UtilityDetailContent } from '@/components/trip-help'
 
 export const dynamic = 'force-dynamic'
+
+type TripHelpPartnerRow = {
+  name: string
+  slug: string
+  address: string
+  city: string
+  partner_services: Array<{ service_type: string; is_active: boolean }> | null
+}
 
 export default async function UtilityDetailPage({
   params,
@@ -38,13 +48,15 @@ export default async function UtilityDetailPage({
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  const { data: partner } = await admin
-    .from('partners')
-    .select('name, slug, address, city, partner_services(service_type, is_active)')
-    .eq('slug', utility.partnerSlug)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .maybeSingle()
+  const { data: partner } = await fetchPartnerBySlug<TripHelpPartnerRow>(
+    admin,
+    utility.partnerSlug,
+    'name, slug, address, city, partner_services(service_type, is_active)'
+  )
+
+  const hours = partner
+    ? resolvePartnerOpeningHours(partner.slug, partner.opening_hours, partner.timezone)
+    : null
 
   const hasService =
     utility.slug === 'transfers' ||
@@ -61,6 +73,8 @@ export default async function UtilityDetailPage({
       }
       partnerHref={partner ? `/perks/${partner.slug}` : '/perks'}
       isAvailable={Boolean(partner && hasService)}
+      hoursSummary={hours?.summary}
+      isOpen={hours?.isOpen}
     />
   )
 }

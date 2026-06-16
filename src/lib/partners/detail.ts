@@ -1,19 +1,15 @@
+import type { PartnerOpeningHoursData } from '@/lib/partners/opening-hours'
+import {
+  getPartnerHoursFromData,
+  getPartnerHoursSummary,
+  isPartnerOpenNowFromData,
+  parsePartnerOpeningHours,
+} from '@/lib/partners/opening-hours'
 import type { PartnerCategory } from '@/types'
 
 export interface PartnerHoursDay {
   day: string
   hours: string
-}
-
-export interface PartnerHoursSchedule {
-  days: PartnerHoursDay[]
-  /** IANA timezone for open-now checks */
-  timezone: string
-  /** 24h open/close for weekdays, used when no per-slug schedule */
-  weekdayOpen: number
-  weekdayClose: number
-  weekendOpen: number
-  weekendClose: number
 }
 
 const CATEGORY_LABELS: Record<PartnerCategory, string> = {
@@ -39,15 +35,9 @@ const SLUG_HOURS: Record<string, PartnerHoursDay[]> = {
     { day: 'Mon – Fri', hours: '5:00 am – 9:00 pm' },
     { day: 'Sat – Sun', hours: '6:00 am – 7:00 pm' },
   ],
-  frequencies: [
-    { day: 'Mon – Sun', hours: '7:00 am – 5:00 pm' },
-  ],
-  'le-shack': [
-    { day: 'Mon – Sun', hours: '8:00 am – 6:00 pm' },
-  ],
-  'frozen-yogurt-place': [
-    { day: 'Mon – Sun', hours: '10:00 am – 8:00 pm' },
-  ],
+  frequencies: [{ day: 'Mon – Sun', hours: '7:00 am – 5:00 pm' }],
+  'le-shack': [{ day: 'Mon – Sun', hours: '8:00 am – 6:00 pm' }],
+  'frozen-yogurt-place': [{ day: 'Mon – Sun', hours: '10:00 am – 8:00 pm' }],
 }
 
 const DEFAULT_HOURS: PartnerHoursDay[] = [
@@ -55,14 +45,7 @@ const DEFAULT_HOURS: PartnerHoursDay[] = [
   { day: 'Sat – Sun', hours: '10:00 am – 4:00 pm' },
 ]
 
-const QLD_SCHEDULE: PartnerHoursSchedule = {
-  days: DEFAULT_HOURS,
-  timezone: 'Australia/Brisbane',
-  weekdayOpen: 9,
-  weekdayClose: 17,
-  weekendOpen: 10,
-  weekendClose: 16,
-}
+const DEFAULT_TIMEZONE = 'Australia/Brisbane'
 
 export function getPartnerCategoryLabel(category: PartnerCategory): string {
   return CATEGORY_LABELS[category] ?? 'Partner'
@@ -76,40 +59,66 @@ export function getPartnerOfferHeadline(
   return `${discountLabel} · ${primaryServiceName.toLowerCase()}`
 }
 
-export function getPartnerHours(slug: string): PartnerHoursDay[] {
-  return SLUG_HOURS[slug] ?? DEFAULT_HOURS
+export function resolvePartnerOpeningHours(
+  slug: string,
+  openingHoursRaw: unknown,
+  timezone?: string | null
+): {
+  rows: PartnerHoursDay[]
+  summary: string
+  isOpen: boolean
+  timezone: string
+  parsed: PartnerOpeningHoursData | null
+} {
+  const parsed = parsePartnerOpeningHours(openingHoursRaw)
+  const fallbackRows = SLUG_HOURS[slug] ?? DEFAULT_HOURS
+  const tz = timezone || DEFAULT_TIMEZONE
+  const rows = getPartnerHoursFromData(parsed, fallbackRows)
+  const summary = getPartnerHoursSummary(parsed, rows[0]?.hours ?? 'Hours vary')
+
+  return {
+    rows,
+    summary,
+    isOpen: isPartnerOpenNowFromData(parsed, tz, isPartnerOpenNowLegacy(slug, tz)),
+    timezone: tz,
+    parsed,
+  }
 }
 
-export function isPartnerOpenNow(slug: string, schedule: PartnerHoursSchedule = QLD_SCHEDULE): boolean {
-  const now = new Date()
+/** @deprecated Use resolvePartnerOpeningHours — kept for call sites migrating gradually */
+export function getPartnerHours(slug: string, openingHoursRaw?: unknown): PartnerHoursDay[] {
+  return resolvePartnerOpeningHours(slug, openingHoursRaw).rows
+}
+
+/** @deprecated Use resolvePartnerOpeningHours */
+export function isPartnerOpenNow(
+  slug: string,
+  openingHoursRaw?: unknown,
+  timezone?: string | null
+): boolean {
+  return resolvePartnerOpeningHours(slug, openingHoursRaw, timezone).isOpen
+}
+
+function isPartnerOpenNowLegacy(slug: string, timezone: string): boolean {
   const parts = new Intl.DateTimeFormat('en-AU', {
-    timeZone: schedule.timezone,
+    timeZone: timezone,
     weekday: 'short',
     hour: 'numeric',
     hour12: false,
-  }).formatToParts(now)
+  }).formatToParts(new Date())
 
   const weekday = parts.find((part) => part.type === 'weekday')?.value ?? ''
   const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '12')
   const isWeekend = weekday === 'Sat' || weekday === 'Sun'
 
-  const open = isWeekend ? schedule.weekendOpen : schedule.weekdayOpen
-  const close = isWeekend ? schedule.weekendClose : schedule.weekdayClose
-
-  const slugHours = SLUG_HOURS[slug]
-  if (slugHours) {
-    if (slug === 'ailey-beach-fit') {
-      return isWeekend ? hour >= 6 && hour < 19 : hour >= 5 && hour < 21
-    }
-    if (slug === 'frequencies' || slug === 'le-shack') {
-      return hour >= 7 && hour < (slug === 'le-shack' ? 18 : 17)
-    }
-    if (slug === 'frozen-yogurt-place') {
-      return hour >= 10 && hour < 20
-    }
+  if (slug === 'ailey-beach-fit') {
+    return isWeekend ? hour >= 6 && hour < 19 : hour >= 5 && hour < 21
   }
+  if (slug === 'frequencies') return hour >= 7 && hour < 17
+  if (slug === 'le-shack') return hour >= 8 && hour < 18
+  if (slug === 'frozen-yogurt-place') return hour >= 10 && hour < 20
 
-  return hour >= open && hour < close
+  return isWeekend ? hour >= 10 && hour < 16 : hour >= 9 && hour < 17
 }
 
 export function getPartnerMapUrl(lat: number, lng: number): string {

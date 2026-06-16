@@ -43,6 +43,8 @@ export interface UtilityDetailContentProps {
   partnerAddress: string
   partnerHref: string
   isAvailable?: boolean
+  hoursSummary?: string
+  isOpen?: boolean
 }
 
 export function UtilityDetailContent({
@@ -51,6 +53,8 @@ export function UtilityDetailContent({
   partnerAddress,
   partnerHref,
   isAvailable = true,
+  hoursSummary,
+  isOpen,
 }: UtilityDetailContentProps) {
   return (
     <div className="animate-fade-in -mx-4 -mt-6 pb-4">
@@ -123,7 +127,19 @@ export function UtilityDetailContent({
           </p>
           <p className="mt-2 flex items-center gap-2 text-sm text-drift-text-muted">
             <ClockIcon />
-            {utility.hoursLabel}
+            <span>
+              {hoursSummary ?? utility.hoursLabel}
+              {typeof isOpen === 'boolean' ? (
+                <span
+                  className={cn(
+                    'ml-2 font-semibold',
+                    isOpen ? 'text-emerald-400' : 'text-drift-text-subtle'
+                  )}
+                >
+                  · {isOpen ? 'Open now' : 'Closed now'}
+                </span>
+              ) : null}
+            </span>
           </p>
         </div>
 

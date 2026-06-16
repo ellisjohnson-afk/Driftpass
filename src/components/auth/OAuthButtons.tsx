@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { getOAuthCallbackUrl, setAuthPostLoginCookie } from '@/lib/auth/helpers'
 import { getClientAppOrigin } from '@/lib/auth/app-origin'
+import { AuthAlert } from '@/components/auth/AuthShell'
 
 type OAuthProvider = 'google'
 
@@ -29,9 +30,7 @@ export function OAuthButtons({ next = '/account', disabled = false }: OAuthButto
     const supabase = createClient()
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo,
-      },
+      options: { redirectTo },
     })
 
     if (oauthError) {
@@ -44,29 +43,27 @@ export function OAuthButtons({ next = '/account', disabled = false }: OAuthButto
 
   return (
     <div className="space-y-3">
-      {error && (
-        <div className="bg-red-900/30 border border-red-800 text-red-400 rounded-lg px-4 py-3 text-sm">
-          {error}
-        </div>
-      )}
+      {error ? <AuthAlert tone="error">{error}</AuthAlert> : null}
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-[#2A2A2A]" />
+          <div className="w-full border-t border-drift-border/60" />
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-[#1A1A1A] px-2 text-[#6B7280]">or continue with</span>
+          <span className="bg-drift-navy-light px-2 text-drift-text-muted">or continue with</span>
         </div>
       </div>
 
       <button
         type="button"
         disabled={disabled || isLoading}
-        onClick={() => { void signInWith('google') }}
-        className="flex items-center justify-center gap-2 w-full py-3 rounded-lg border border-[#2A2A2A] text-sm font-medium text-white hover:border-[#4A4A4A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={() => {
+          void signInWith('google')
+        }}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-drift-border py-3 text-sm font-medium text-white transition-colors hover:border-drift-gold-to/40 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loadingProvider === 'google' ? (
-          <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
         ) : (
           <GoogleIcon />
         )}
@@ -78,7 +75,7 @@ export function OAuthButtons({ next = '/account', disabled = false }: OAuthButto
 
 function GoogleIcon() {
   return (
-    <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
+    <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
       <path
         fill="#4285F4"
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

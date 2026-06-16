@@ -5,6 +5,15 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { OAuthButtons } from '@/components/auth/OAuthButtons'
+import {
+  AuthAlert,
+  AuthCard,
+  AuthInput,
+  AuthLink,
+  AuthPrimaryButton,
+  AuthSecondaryButton,
+  AuthShell,
+} from '@/components/auth/AuthShell'
 import { resolveAuthNext, withTimeout } from '@/lib/auth/helpers'
 import { confirmationRedirectUrl, formatSignInError, passwordRecoveryRedirectUrl } from '@/lib/auth/confirmation'
 
@@ -128,102 +137,85 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="block text-center font-display text-2xl font-bold mb-8">
-          <span className="text-white">Drift</span>
-          <span className="text-[#00FF7F]">Pass</span>
-        </Link>
+    <AuthShell>
+      <AuthCard title="Welcome back" subtitle="Sign in to open your pass and member deals.">
+        {(error || callbackError) && (
+          <AuthAlert tone="error">
+            {error ??
+              (callbackErrorDetail
+                ? `Sign in failed: ${callbackErrorDetail}`
+                : 'Sign in failed. Please try again.')}
+          </AuthAlert>
+        )}
 
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8">
-          <h1 className="text-xl font-bold mb-6">Welcome back</h1>
+        {info ? <AuthAlert tone="success">{info}</AuthAlert> : null}
 
-          {(error || callbackError) && (
-            <div className="bg-red-900/30 border border-red-800 text-red-400 rounded-lg px-4 py-3 text-sm mb-4">
-              {error ??
-                (callbackErrorDetail
-                  ? `Sign in failed: ${callbackErrorDetail}`
-                  : 'Sign in failed. Please try again.')}
+        <OAuthButtons next={next} disabled={loading} />
+
+        <form
+          onSubmit={(e) => {
+            void handleLogin(e)
+          }}
+          className="mt-4 space-y-4"
+        >
+          <AuthInput
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            autoComplete="email"
+            disabled={loading}
+            placeholder="you@email.com"
+          />
+
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="block text-sm text-drift-text-muted">Password</label>
+              <button
+                type="button"
+                onClick={() => {
+                  void handleForgotPassword()
+                }}
+                disabled={loading || resetting}
+                className="text-xs font-semibold text-drift-gold-mid hover:text-white disabled:opacity-50"
+              >
+                {resetting ? 'Sending…' : 'Forgot password?'}
+              </button>
             </div>
-          )}
-
-          {info && (
-            <div className="rounded-lg border border-[#00FF7F]/30 bg-[#00FF7F]/10 px-4 py-3 text-sm text-[#00FF7F] mb-4">
-              {info}
-            </div>
-          )}
-
-          <OAuthButtons next={next} disabled={loading} />
-
-          <form onSubmit={(e) => { void handleLogin(e) }} className="space-y-4 mt-4">
-            <div>
-              <label className="block text-sm text-[#9CA3AF] mb-1.5">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                disabled={loading}
-                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors disabled:opacity-60"
-                placeholder="you@email.com"
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-sm text-[#9CA3AF]">Password</label>
-                <button
-                  type="button"
-                  onClick={() => { void handleForgotPassword() }}
-                  disabled={loading || resetting}
-                  className="text-xs text-[#00FF7F] hover:underline disabled:opacity-50"
-                >
-                  {resetting ? 'Sending…' : 'Forgot password?'}
-                </button>
-              </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-                disabled={loading}
-                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors disabled:opacity-60"
-                placeholder="••••••••"
-              />
-            </div>
-
-            <button
-              type="submit"
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
               disabled={loading}
-              className="w-full bg-[#00FF7F] text-[#0A0A0A] py-3 rounded-lg font-bold hover:bg-[#00E070] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {loading && (
-                <span className="w-4 h-4 border-2 border-[#0A0A0A] border-t-transparent rounded-full animate-spin" />
-              )}
-              {loading ? 'Signing in…' : 'Sign in with email'}
-            </button>
-          </form>
+              placeholder="••••••••"
+              className="w-full rounded-xl border border-drift-border bg-drift-navy-deep px-4 py-3 text-white placeholder:text-drift-text-subtle transition-colors focus:border-drift-gold-to/50 focus:outline-none disabled:opacity-60"
+            />
+          </div>
 
-          <button
-            type="button"
-            onClick={() => { void handleResendConfirmation() }}
-            disabled={loading || resending}
-            className="mt-3 w-full rounded-lg border border-[#2A2A2A] py-2.5 text-sm text-[#9CA3AF] transition-colors hover:border-[#00FF7F]/40 hover:text-white disabled:opacity-50"
-          >
-            {resending ? 'Sending confirmation…' : 'Resend confirmation email'}
-          </button>
+          <AuthPrimaryButton type="submit" disabled={loading} loading={loading}>
+            {loading ? 'Signing in…' : 'Sign in with email'}
+          </AuthPrimaryButton>
+        </form>
 
-          <p className="text-center text-sm text-[#6B7280] mt-6">
-            Don&apos;t have a pass?{' '}
-            <Link href={signupHref} className="text-[#00FF7F] hover:underline">
-              Get started
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+        <AuthSecondaryButton
+          type="button"
+          onClick={() => {
+            void handleResendConfirmation()
+          }}
+          disabled={loading || resending}
+          className="mt-3"
+        >
+          {resending ? 'Sending confirmation…' : 'Resend confirmation email'}
+        </AuthSecondaryButton>
+
+        <p className="mt-6 text-center text-sm text-drift-text-muted">
+          Don&apos;t have a pass? <AuthLink href={signupHref}>Get started</AuthLink>
+        </p>
+      </AuthCard>
+    </AuthShell>
   )
 }
 

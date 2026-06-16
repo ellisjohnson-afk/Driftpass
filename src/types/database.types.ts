@@ -210,6 +210,8 @@ export interface Database {
           google_place_id: string | null
           stripe_connect_account_id: string | null
           logo_url: string | null
+          timezone: string
+          opening_hours: Json | null
           is_active: boolean
           is_verified: boolean
           is_featured: boolean
@@ -236,6 +238,8 @@ export interface Database {
           google_place_id?: string | null
           stripe_connect_account_id?: string | null
           logo_url?: string | null
+          timezone?: string
+          opening_hours?: Json | null
           is_active?: boolean
           is_verified?: boolean
           is_featured?: boolean
@@ -262,6 +266,8 @@ export interface Database {
           google_place_id?: string | null
           stripe_connect_account_id?: string | null
           logo_url?: string | null
+          timezone?: string
+          opening_hours?: Json | null
           is_active?: boolean
           is_verified?: boolean
           is_featured?: boolean

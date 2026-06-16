@@ -14,6 +14,7 @@
     "db:apply-005": "node scripts/apply-migration-005.mjs",
     "db:apply-006": "node scripts/apply-migration-006.mjs",
     "db:apply-007": "node scripts/apply-migration-007.mjs",
+    "db:apply-008": "node scripts/apply-migration-008.mjs",
     "stripe:verify": "node scripts/verify-stripe-prices.mjs",
     "auth:link": "node scripts/generate-auth-link.mjs",
     "test:pin": "node scripts/test-pin-windows.mjs",

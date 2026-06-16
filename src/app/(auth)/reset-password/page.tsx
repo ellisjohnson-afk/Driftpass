@@ -1,9 +1,16 @@
 'use client'
 
 import { useEffect, useState, Suspense } from 'react'
-import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import {
+  AuthAlert,
+  AuthCard,
+  AuthInput,
+  AuthLink,
+  AuthPrimaryButton,
+  AuthShell,
+} from '@/components/auth/AuthShell'
 
 function ResetPasswordForm() {
   const [password, setPassword] = useState('')
@@ -33,7 +40,9 @@ function ResetPasswordForm() {
         return
       }
 
-      const { data: { session } } = await supabase.auth.getSession()
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
       if (session) {
         setReady(true)
       } else {
@@ -78,77 +87,58 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <Link href="/" className="block text-center font-display text-2xl font-bold mb-8">
-          <span className="text-white">Drift</span>
-          <span className="text-[#00FF7F]">Pass</span>
-        </Link>
+    <AuthShell>
+      <AuthCard title="Set a new password" subtitle="Choose a password for email sign-in.">
+        {bootstrapping ? (
+          <AuthAlert tone="info">Verifying your reset link…</AuthAlert>
+        ) : null}
 
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-2xl p-8">
-          <h1 className="text-xl font-bold mb-2">Set a new password</h1>
-          <p className="text-sm text-[#9CA3AF] mb-6">
-            Choose a password for email sign-in.
-          </p>
+        {error ? <AuthAlert tone="error">{error}</AuthAlert> : null}
 
-          {bootstrapping && (
-            <p className="text-sm text-[#9CA3AF] mb-4">Verifying your reset link…</p>
-          )}
+        <form
+          onSubmit={(e) => {
+            void handleSubmit(e)
+          }}
+          className="space-y-4"
+        >
+          <AuthInput
+            label="New password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            disabled={!ready || bootstrapping}
+            placeholder="Min 8 characters"
+          />
 
-          {error && (
-            <div className="bg-red-900/30 border border-red-800 text-red-400 rounded-lg px-4 py-3 text-sm mb-4">
-              {error}
-            </div>
-          )}
+          <AuthInput
+            label="Confirm password"
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            disabled={!ready || bootstrapping}
+            placeholder="Repeat password"
+          />
 
-          <form onSubmit={(e) => { void handleSubmit(e) }} className="space-y-4">
-            <div>
-              <label className="block text-sm text-[#9CA3AF] mb-1.5">New password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-                disabled={!ready || bootstrapping}
-                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors disabled:opacity-60"
-                placeholder="Min 8 characters"
-              />
-            </div>
+          <AuthPrimaryButton
+            type="submit"
+            disabled={loading || !ready || bootstrapping}
+            loading={loading}
+          >
+            {loading ? 'Saving…' : 'Save password'}
+          </AuthPrimaryButton>
+        </form>
 
-            <div>
-              <label className="block text-sm text-[#9CA3AF] mb-1.5">Confirm password</label>
-              <input
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-                minLength={8}
-                autoComplete="new-password"
-                disabled={!ready || bootstrapping}
-                className="w-full bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg px-4 py-3 text-white placeholder-[#6B7280] focus:outline-none focus:border-[#00FF7F] transition-colors disabled:opacity-60"
-                placeholder="Repeat password"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !ready || bootstrapping}
-              className="w-full bg-[#00FF7F] text-[#0A0A0A] py-3 rounded-lg font-bold hover:bg-[#00E070] transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Saving…' : 'Save password'}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-[#6B7280] mt-6">
-            <Link href="/login?next=/pricing&plan=membership" className="text-[#00FF7F] hover:underline">
-              Back to sign in
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+        <p className="mt-6 text-center text-sm text-drift-text-muted">
+          <AuthLink href="/login?next=/pricing&plan=membership">Back to sign in</AuthLink>
+        </p>
+      </AuthCard>
+    </AuthShell>
   )
 }
 

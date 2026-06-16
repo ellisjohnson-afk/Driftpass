@@ -9,11 +9,11 @@ import { getPerkDiscountLabel, getPerkImageUrl } from '@/lib/perks/constants'
 import {
   getPartnerCategoryLabel,
   getPartnerDirectionsUrl,
-  getPartnerHours,
   getPartnerMapUrl,
   getPartnerOfferHeadline,
-  isPartnerOpenNow,
+  resolvePartnerOpeningHours,
 } from '@/lib/partners/detail'
+import { fetchPartnerBySlug } from '@/lib/partners/fetch'
 import {
   PartnerHero,
   PartnerMapPreview,
@@ -25,6 +25,21 @@ import { StatusPill } from '@/components/ui/StatusPill'
 import type { PartnerCategory } from '@/types'
 
 export const dynamic = 'force-dynamic'
+
+type PartnerDetailRow = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  category: string
+  address: string
+  city: string
+  state: string
+  lat: number | null
+  lng: number | null
+  google_rating: number | null
+  partner_services: Array<{ name: string; service_type: string; is_active: boolean }> | null
+}
 
 function LocationIcon() {
   return (
@@ -60,15 +75,11 @@ export default async function PartnerDetailPage({
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  const { data: partner } = await admin
-    .from('partners')
-    .select(
-      'id, name, slug, description, category, address, city, state, lat, lng, google_rating, partner_services(name, service_type, is_active)'
-    )
-    .eq('slug', params.slug)
-    .eq('is_active', true)
-    .is('deleted_at', null)
-    .maybeSingle()
+  const { data: partner } = await fetchPartnerBySlug<PartnerDetailRow>(
+    admin,
+    params.slug,
+    'id, name, slug, description, category, address, city, state, lat, lng, google_rating, partner_services(name, service_type, is_active)'
+  )
 
   if (!partner) notFound()
 
@@ -79,8 +90,11 @@ export default async function PartnerDetailPage({
   const offerText = getPartnerOfferHeadline(discountLabel, primaryService)
   const imageUrl = getPerkImageUrl(partner.slug, category)
   const categoryLabel = getPartnerCategoryLabel(category)
-  const hours = getPartnerHours(partner.slug)
-  const isOpen = isPartnerOpenNow(partner.slug)
+  const { rows: hours, isOpen } = resolvePartnerOpeningHours(
+    partner.slug,
+    partner.opening_hours,
+    partner.timezone
+  )
   const hasMap = partner.lat != null && partner.lng != null
 
   return (
