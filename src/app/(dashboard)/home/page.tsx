@@ -10,6 +10,7 @@ import { formatDate } from '@/lib/utils/format'
 import { getPerkDiscountLabel, getPerkImageUrl } from '@/lib/perks/constants'
 import { MembershipCard } from '@/components/pass/MembershipCard'
 import { HomeDealCard } from '@/components/home/HomeDealCard'
+import { NoDealsNearbyEmptyState } from '@/components/ui'
 import type { PartnerCategory } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -108,9 +109,7 @@ export default async function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-drift-border/60 bg-drift-navy-light px-4 py-8 text-center text-sm text-drift-text-muted">
-            More deals coming soon across Australia.
-          </div>
+          <NoDealsNearbyEmptyState />
         )}
       </section>
 

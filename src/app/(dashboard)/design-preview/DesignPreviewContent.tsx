@@ -6,6 +6,7 @@ import { MembershipCard } from '@/components/pass/MembershipCard'
 import { PinDisplay } from '@/components/pass/PinDisplay'
 import { Button } from '@/components/ui/Button'
 import { StatusPill } from '@/components/ui/StatusPill'
+import { EmptyStatesPreview } from '@/components/ui/EmptyStatesPreview'
 
 export function DesignPreviewContent() {
   const [secondsLeft, setSecondsLeft] = useState(47)
@@ -67,6 +68,13 @@ export function DesignPreviewContent() {
         <MembershipCard variant="full" memberName="Ellis Drift">
           <PinDisplay pin="829461" secondsLeft={secondsLeft} />
         </MembershipCard>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-drift-text-muted">
+          Empty states — Figma #10
+        </h2>
+        <EmptyStatesPreview />
       </section>
 
       <section className="space-y-3">

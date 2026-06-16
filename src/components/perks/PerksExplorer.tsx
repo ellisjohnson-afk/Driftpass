@@ -7,7 +7,7 @@ import type { PartnerCategory } from '@/types'
 import { PerkCard } from './PerkCard'
 import { PerkCategoryFilters } from './PerkCategoryFilters'
 import { PerkSearchBar } from './PerkSearchBar'
-import { PerksEmptyState } from './PerksEmptyState'
+import { NoPerkMatchesEmptyState, NoPerksNearbyEmptyState } from '@/components/ui'
 
 export interface PerkListItem {
   id: string
@@ -46,8 +46,6 @@ export function PerksExplorer({ perks }: PerksExplorerProps) {
     return filterPerksBySearch(filtered, query)
   }, [activeFilter, perks, query])
 
-  const hasFilters = query.trim().length > 0 || activeFilter !== 'all'
-
   return (
     <div className="space-y-5 animate-fade-in">
       <header>
@@ -74,22 +72,13 @@ export function PerksExplorer({ perks }: PerksExplorerProps) {
           ))}
         </div>
       ) : perks.length === 0 ? (
-        <PerksEmptyState
-          title="No perks nearby"
-          description="We're adding partners across Australia. Check back soon or show your pass when you find a DriftPass partner."
-        />
+        <NoPerksNearbyEmptyState />
       ) : (
-        <PerksEmptyState
-          title="No matches found"
-          description="Try a different search or category. New partners are added regularly."
-          onClearFilters={
-            hasFilters
-              ? () => {
-                  setQuery('')
-                  setActiveFilter('all')
-                }
-              : undefined
-          }
+        <NoPerkMatchesEmptyState
+          onClearFilters={() => {
+            setQuery('')
+            setActiveFilter('all')
+          }}
         />
       )}
     </div>

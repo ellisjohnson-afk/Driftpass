@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils/cn'
+import { NoProviderEmptyState } from '@/components/ui'
 import type { TripUtility } from '@/lib/trip-help/constants'
 import { TripUtilityIcon } from './UtilityTile'
 
@@ -105,6 +106,12 @@ export function UtilityDetailContent({
 
         <p className="mt-5 text-sm leading-relaxed text-drift-text-muted">{utility.description}</p>
 
+        {!isAvailable ? (
+          <div className="mt-5">
+            <NoProviderEmptyState />
+          </div>
+        ) : (
+          <>
         <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {utility.features.map((feature) => (
             <div
@@ -149,6 +156,8 @@ export function UtilityDetailContent({
         >
           Show pass to redeem
         </Link>
+          </>
+        )}
       </div>
     </div>
   )

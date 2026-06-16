@@ -17,6 +17,7 @@ import {
   ProfileStatsRow,
 } from '@/components/profile'
 import { StatusPill } from '@/components/ui/StatusPill'
+import { NoHistoryEmptyState, NoPassEmptyState } from '@/components/ui'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -141,6 +142,8 @@ export default async function AccountPage({
             ]}
           />
 
+          {stats.dealsClaimed === 0 ? <NoHistoryEmptyState /> : null}
+
           {sub?.cancel_at_period_end && sub.current_period_end ? (
             <div className="rounded-2xl border border-yellow-800/60 bg-yellow-900/20 px-4 py-3 text-sm text-yellow-300">
               Your membership ends on {formatDate(sub.current_period_end)}. Manage billing below
@@ -157,24 +160,22 @@ export default async function AccountPage({
             Open My Pass
           </Link>
         </>
-      ) : (
-        <div className="rounded-3xl border border-drift-border/60 bg-drift-navy-light px-6 py-8 text-center">
-          <div className="text-4xl mb-3">🎫</div>
-          <h2 className="font-bold">Membership not active yet</h2>
-          <p className="mt-2 text-sm text-drift-text-muted">
-            {justSubscribed
-              ? 'Payment received — we are syncing your pass now.'
-              : 'Start your Drift Pass membership to unlock your PIN and member perks.'}
+      ) : justSubscribed ? (
+        <div className="rounded-3xl border border-amber-800/50 bg-amber-900/20 px-6 py-8 text-center">
+          <h2 className="font-bold text-amber-200">Finishing activation…</h2>
+          <p className="mt-2 text-sm text-amber-300/90">
+            Payment received — we are syncing your pass now. Refresh in a few seconds or open My
+            Pass.
           </p>
-          {!justSubscribed ? (
-            <Link
-              href="/pricing"
-              className="mt-5 inline-flex rounded-2xl bg-drift-gold-gradient px-6 py-3 text-sm font-bold text-drift-navy-deep shadow-drift-card transition-all hover:brightness-105"
-            >
-              Start membership
-            </Link>
-          ) : null}
+          <Link
+            href="/pass"
+            className="mt-5 inline-flex rounded-2xl bg-drift-gold-gradient px-6 py-3 text-sm font-bold text-drift-navy-deep shadow-drift-card transition-all hover:brightness-105"
+          >
+            Open My Pass
+          </Link>
         </div>
+      ) : (
+        <NoPassEmptyState />
       )}
 
       <details className="rounded-2xl border border-drift-border/60 bg-drift-navy-light px-4 py-3">
