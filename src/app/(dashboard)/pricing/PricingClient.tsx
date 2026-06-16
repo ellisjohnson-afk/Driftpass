@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { HowItWorksSteps, MembershipPricingCard } from '@/components/pricing'
+import {
+  HowItWorksSteps,
+  MembershipPricingCard,
+  SponsorLogosSection,
+} from '@/components/pricing'
 import { isLegacyPlanSlug } from '@/constants/plans'
 import { buildPricingCheckoutPath } from '@/lib/auth/helpers'
 import { appUrlAt } from '@/lib/auth/canonical-url'
@@ -15,9 +19,17 @@ type PricingClientProps = {
   isAuthenticated?: boolean
 }
 
+function BackIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
+      <path d="M15 18 9 12l6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export default function PricingClient({
   initialPlan = null,
-  backHref = '/perks',
+  backHref = '/',
   isAuthenticated = true,
 }: PricingClientProps) {
   const [loading, setLoading] = useState(false)
@@ -28,7 +40,7 @@ export default function PricingClient({
 
   function startMembership() {
     if (!isAuthenticated) {
-      window.location.href = appUrlAt(getClientAppOrigin(), '/login', {
+      window.location.href = appUrlAt(getClientAppOrigin(), '/signup', {
         next: buildPricingCheckoutPath(checkoutSlug),
         plan: checkoutSlug,
       })
@@ -83,37 +95,58 @@ export default function PricingClient({
   }, [initialPlan, isAuthenticated])
 
   return (
-    <div className="animate-fade-in space-y-8 pb-4">
-      <div className="flex items-center gap-3">
+    <div className="animate-fade-in -mx-4 -mt-6 pb-4">
+      <div className="bg-drift-navy-deep px-5 pb-8 pt-5">
         <Link
           href={backHref}
-          className="flex h-10 w-10 items-center justify-center rounded-full border border-drift-border bg-drift-navy-light text-drift-text-muted transition-colors hover:text-white"
+          className="mb-6 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white transition-colors hover:bg-white/20"
           aria-label="Go back"
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5" aria-hidden>
-            <path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <BackIcon />
         </Link>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-drift-text-muted">
-            Drift Pass
-          </p>
-          <h1 className="text-2xl font-bold">Membership</h1>
-        </div>
+
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-drift-gold-mid">
+          Drift Pass
+        </p>
+        <h1 className="mt-2 text-3xl font-bold">Membership</h1>
       </div>
 
-      <HowItWorksSteps />
+      <div className="relative space-y-8 px-5 pb-6 pt-6">
+        <HowItWorksSteps />
 
-      {checkoutError && (
-        <div className="rounded-xl border border-red-800/50 bg-red-900/30 px-4 py-3 text-sm text-red-400">
-          {checkoutError}
-        </div>
-      )}
+        {checkoutError ? (
+          <div className="rounded-xl border border-red-800/50 bg-red-900/30 px-4 py-3 text-sm text-red-400">
+            {checkoutError}
+          </div>
+        ) : null}
 
-      <MembershipPricingCard
-        loading={loading}
-        onStart={startMembership}
-      />
+        <MembershipPricingCard loading={loading} onStart={startMembership} />
+
+        <SponsorLogosSection />
+
+        {!isAuthenticated ? (
+          <p className="text-center text-sm text-drift-text-muted">
+            Already a member?{' '}
+            <Link
+              href={appUrlAt(getClientAppOrigin(), '/login', {
+                next: buildPricingCheckoutPath('membership'),
+                plan: 'membership',
+              })}
+              className="font-semibold text-drift-gold-mid hover:text-white"
+            >
+              Sign in
+            </Link>
+          </p>
+        ) : null}
+
+        <p className="text-center text-[11px] leading-relaxed text-drift-text-subtle">
+          Secure checkout via Stripe. By starting membership you agree to our{' '}
+          <Link href="/terms" className="underline hover:text-drift-text-muted">
+            terms
+          </Link>
+          .
+        </p>
+      </div>
     </div>
   )
 }

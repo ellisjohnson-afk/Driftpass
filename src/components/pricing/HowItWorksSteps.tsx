@@ -19,18 +19,19 @@ const STEPS = [
 export function HowItWorksSteps() {
   return (
     <section className="space-y-5">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-drift-text-muted">
+      <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-drift-gold-mid">
         How it works
       </h2>
       <ol className="space-y-5">
         {STEPS.map((step) => (
           <li key={step.number} className="flex gap-4">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-drift-navy-light text-sm font-bold text-drift-gold-mid">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-drift-gold-to/30 bg-drift-navy-light text-sm font-bold text-drift-gold-mid">
               {step.number}
             </div>
-            <div>
-              <p className="text-sm font-bold text-white">{step.title}</p>
-              <p className="mt-1 text-sm leading-relaxed text-drift-text-muted">
+            <div className="pt-0.5">
+              <p className="text-sm leading-relaxed text-drift-text-muted">
+                <span className="font-bold text-white">{step.title}</span>
+                {' — '}
                 {step.description}
               </p>
             </div>

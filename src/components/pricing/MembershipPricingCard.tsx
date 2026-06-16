@@ -68,10 +68,13 @@ export function MembershipPricingCard({
         type="button"
         onClick={onStart}
         disabled={loading}
-        className="mt-8 w-full rounded-2xl bg-drift-gold-dark/35 py-4 text-base font-bold text-drift-navy-deep transition-all hover:bg-drift-gold-dark/45 disabled:opacity-60"
+        className="mt-8 w-full rounded-2xl bg-drift-gold-dark py-4 text-base font-bold text-drift-navy-deep shadow-md transition-all hover:brightness-110 disabled:opacity-60"
       >
         {loading ? 'Starting checkout…' : 'Start Membership'}
       </button>
+      <p className="mt-3 text-center text-xs text-drift-navy-deep/60">
+        Billed weekly · Cancel anytime
+      </p>
     </div>
   )
 }

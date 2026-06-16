@@ -19,6 +19,7 @@ export default async function DashboardLayout({
 
   const pathname = (await headers()).get('x-pathname') ?? '/account'
   const isPublicPricing = pathname === '/pricing'
+  const isPricingPage = pathname === '/pricing'
   const isPassPage = pathname === '/pass'
   const isPerksPage = pathname === '/perks' || pathname.startsWith('/perks/')
   const isTripHelpPage = pathname === '/trip-help' || pathname.startsWith('/trip-help/')
@@ -46,7 +47,7 @@ export default async function DashboardLayout({
 
   const hasActivePass = Boolean(sub)
 
-  const activateBanner = !hasActivePass && !isPassPage ? (
+  const activateBanner = !hasActivePass && !isPassPage && !isPricingPage ? (
     <div className="border-b border-drift-teal/20 bg-drift-teal/10 px-4 py-3">
       <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
         <p className="text-sm text-drift-teal">
@@ -66,8 +67,10 @@ export default async function DashboardLayout({
     <>
       {activateBanner}
       <AppShell
-        showHeader={!isPassPage && !isPerksPage && !isTripHelpPage && !isAccountPage}
-        showBottomNav
+        showHeader={
+          !isPassPage && !isPerksPage && !isTripHelpPage && !isAccountPage && !isPricingPage
+        }
+        showBottomNav={!isPricingPage}
         exploreHref="/perks"
         passHref="/pass"
         tripsHref="/trip-help"
