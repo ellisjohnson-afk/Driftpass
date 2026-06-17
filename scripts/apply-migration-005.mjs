@@ -56,7 +56,7 @@ console.log('Fixing partner name...')
 await supabase
   .from('partners')
   .update({ name: 'Airlie Beach Fit' })
-  .eq('slug', 'ailey-beach-fit')
+  .eq('slug', 'airlie-beach-fit')
 
 // Check pin_shard column
 const { error: shardColError } = await supabase.from('subscriptions').select('pin_shard').limit(1)

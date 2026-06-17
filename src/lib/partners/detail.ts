@@ -31,11 +31,11 @@ const CATEGORY_LABELS: Record<PartnerCategory, string> = {
 }
 
 const SLUG_HOURS: Record<string, PartnerHoursDay[]> = {
-  'ailey-beach-fit': [
+  'airlie-beach-fit': [
     { day: 'Mon – Fri', hours: '5:00 am – 9:00 pm' },
     { day: 'Sat – Sun', hours: '6:00 am – 7:00 pm' },
   ],
-  frequencies: [{ day: 'Mon – Sun', hours: '7:00 am – 5:00 pm' }],
+  'frequent-seas': [{ day: 'Mon – Sun', hours: '7:00 am – 5:00 pm' }],
   'le-shack': [{ day: 'Mon – Sun', hours: '8:00 am – 6:00 pm' }],
   'frozen-yogurt-place': [{ day: 'Mon – Sun', hours: '10:00 am – 8:00 pm' }],
 }
@@ -111,10 +111,10 @@ function isPartnerOpenNowLegacy(slug: string, timezone: string): boolean {
   const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '12')
   const isWeekend = weekday === 'Sat' || weekday === 'Sun'
 
-  if (slug === 'ailey-beach-fit') {
+  if (slug === 'airlie-beach-fit') {
     return isWeekend ? hour >= 6 && hour < 19 : hour >= 5 && hour < 21
   }
-  if (slug === 'frequencies') return hour >= 7 && hour < 17
+  if (slug === 'frequent-seas') return hour >= 7 && hour < 17
   if (slug === 'le-shack') return hour >= 8 && hour < 18
   if (slug === 'frozen-yogurt-place') return hour >= 10 && hour < 20
 

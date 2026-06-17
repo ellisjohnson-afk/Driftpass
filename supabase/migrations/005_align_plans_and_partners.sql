@@ -17,7 +17,7 @@ UPDATE public.plans SET price_aud_cents = 5900, credits_per_month = 70 WHERE slu
 UPDATE public.plans SET price_aud_cents = 2200, credits_per_month = 25 WHERE slug = 'van_lifer';
 
 -- Fix founding partner name typo
-UPDATE public.partners SET name = 'Airlie Beach Fit' WHERE slug = 'ailey-beach-fit';
+UPDATE public.partners SET name = 'Airlie Beach Fit' WHERE slug = 'airlie-beach-fit';
 
 -- Align existing service credit costs to spec
 UPDATE public.partner_services SET credit_cost = 4
@@ -29,7 +29,7 @@ WHERE partner_id = (SELECT id FROM public.partners WHERE slug = 'le-shack')
   AND service_type = 'cafe_session';
 
 UPDATE public.partner_services SET credit_cost = 6
-WHERE partner_id = (SELECT id FROM public.partners WHERE slug = 'frequencies')
+WHERE partner_id = (SELECT id FROM public.partners WHERE slug = 'frequent-seas')
   AND service_type = 'cafe_session';
 
 -- Add spec sample services (shower 5, laundry 8, co-working 12)
@@ -39,7 +39,7 @@ FROM public.partners p,
 (VALUES
   ('le-shack',       'shower',        'Shower Access',           5,  400, 40),
   ('le-shack',       'laundry',       'Laundry Load',            8,  600, 20),
-  ('frequencies',    'coworking',     'Co-working Half Day',    12,  900, 15)
+  ('frequent-seas',  'coworking',     'Co-working Half Day',    12,  900, 15)
 ) AS s(partner_slug, service_type, name, credit_cost, aud_payout_cents, max_daily)
 WHERE p.slug = s.partner_slug
 ON CONFLICT (partner_id, service_type) DO UPDATE SET

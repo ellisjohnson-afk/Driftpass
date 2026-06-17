@@ -73,7 +73,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     label: 'Coworking',
     shortLabel: 'Coworking',
     tagline: 'Desk space with great WiFi',
-    partnerSlug: 'frequencies',
+    partnerSlug: 'frequent-seas',
     serviceType: 'coworking',
     description:
       'Half-day coworking with fast WiFi, power, and coffee on tap. Built for digital nomads passing through Airlie Beach.',
@@ -87,7 +87,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     label: 'Water Refill',
     shortLabel: 'Water',
     tagline: 'Top up your van tank',
-    partnerSlug: 'frequencies',
+    partnerSlug: 'frequent-seas',
     serviceType: 'water_fill',
     description:
       'Refill drinking water for bottles and van tanks. Stay hydrated on the road without hunting for petrol stations.',
@@ -128,7 +128,7 @@ export const TRIP_MARKETPLACE: MarketplaceItem[] = [
     description: 'Single gym visit',
     priceLabel: '$5.99',
     emoji: '🏋️',
-    href: '/perks/ailey-beach-fit',
+    href: '/perks/airlie-beach-fit',
   },
   {
     slug: 'coffee-deals',
@@ -136,7 +136,7 @@ export const TRIP_MARKETPLACE: MarketplaceItem[] = [
     description: 'Premium coffee offers',
     priceLabel: '$2.99',
     emoji: '☕',
-    href: '/perks/frequencies',
+    href: '/perks/frequent-seas',
   },
   {
     slug: 'tours-experiences',

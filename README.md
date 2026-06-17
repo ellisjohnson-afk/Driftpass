@@ -152,7 +152,7 @@ where email = 'hello@driftpass.com.au';
 insert into public.partner_users (user_id, partner_id, role)
 select
   (select id from public.profiles where email = 'partner@example.com'),
-  (select id from public.partners where slug = 'ailey-beach-fit'),
+  (select id from public.partners where slug = 'airlie-beach-fit'),
   'owner';
 ```
 

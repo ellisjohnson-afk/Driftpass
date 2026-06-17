@@ -18,7 +18,7 @@ insert into public.partners (name, slug, description, category, address, city, s
 values
   (
     'Airlie Beach Fit',
-    'ailey-beach-fit',
+    'airlie-beach-fit',
     'Premium gym and fitness classes on the Airlie Beach strip. Yoga, HIIT, and strength training.',
     'gym_fitness',
     '263 Shute Harbour Rd',
@@ -43,8 +43,8 @@ values
     true, true, true
   ),
   (
-    'Frequencies',
-    'frequencies',
+    'Frequent-Seas',
+    'frequent-seas',
     'Digital nomad café, community events, and van lifer services. Best WiFi in town.',
     'cafe_cowork',
     '12 The Esplanade',
@@ -72,7 +72,7 @@ on conflict (slug) do nothing;
 
 -- Services for founding partners
 -- Airlie Beach Fit
-with partner as (select id from public.partners where slug = 'ailey-beach-fit')
+with partner as (select id from public.partners where slug = 'airlie-beach-fit')
 insert into public.partner_services (partner_id, service_type, name, credit_cost, aud_payout_cents, max_daily_redemptions)
 select
   partner.id,
@@ -105,8 +105,8 @@ from partner, (values
 ) as s(service_type, name, credit_cost, aud_payout_cents, max_daily)
 on conflict (partner_id, service_type) do nothing;
 
--- Frequencies
-with partner as (select id from public.partners where slug = 'frequencies')
+-- Frequent-Seas
+with partner as (select id from public.partners where slug = 'frequent-seas')
 insert into public.partner_services (partner_id, service_type, name, credit_cost, aud_payout_cents, max_daily_redemptions)
 select
   partner.id,

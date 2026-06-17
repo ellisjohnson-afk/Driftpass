@@ -47,8 +47,8 @@ const CATEGORY_DISCOUNT: Partial<Record<PartnerCategory, string>> = {
 }
 
 const SLUG_DISCOUNT: Record<string, string> = {
-  'ailey-beach-fit': '20% off',
-  frequencies: '15% off',
+  'airlie-beach-fit': '20% off',
+  'frequent-seas': '15% off',
   'le-shack': 'Member rate',
   'frozen-yogurt-place': '20% off',
 }
@@ -87,9 +87,9 @@ const CATEGORY_IMAGE: Partial<Record<PartnerCategory, string>> = {
 }
 
 const SLUG_IMAGE: Record<string, string> = {
-  'ailey-beach-fit':
+  'airlie-beach-fit':
     'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=600&q=80',
-  frequencies:
+  'frequent-seas':
     'https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=600&q=80',
   'le-shack':
     'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&q=80',

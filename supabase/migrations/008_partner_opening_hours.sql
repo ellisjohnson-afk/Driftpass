@@ -15,7 +15,7 @@ update public.partners set
       { "label": "Sat – Sun", "hours": "6:00 am – 7:00 pm", "open": "06:00", "close": "19:00", "days": [0,6] }
     ]
   }'::jsonb
-where slug = 'ailey-beach-fit';
+where slug = 'airlie-beach-fit';
 
 update public.partners set
   timezone = 'Australia/Brisbane',
@@ -24,7 +24,7 @@ update public.partners set
       { "label": "Mon – Sun", "hours": "7:00 am – 5:00 pm", "open": "07:00", "close": "17:00", "days": [0,1,2,3,4,5,6] }
     ]
   }'::jsonb
-where slug = 'frequencies';
+where slug = 'frequent-seas';
 
 update public.partners set
   timezone = 'Australia/Brisbane',

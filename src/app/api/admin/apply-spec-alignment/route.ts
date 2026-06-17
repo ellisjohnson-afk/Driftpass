@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   await admin
     .from('partners')
     .update({ name: 'Airlie Beach Fit' })
-    .eq('slug', 'ailey-beach-fit')
+    .eq('slug', 'airlie-beach-fit')
 
   const { data: subs, error: subsError } = await admin
     .from('subscriptions')
