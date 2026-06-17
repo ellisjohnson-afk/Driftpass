@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
   }
 
   const appOrigin = getAppOriginFromRequest(request)
-  const finalRedirect = appPathAt(appOrigin, destination)
 
   if (oauthError) {
     console.error('[Auth callback] OAuth provider error:', oauthError, oauthErrorDescription)
@@ -48,7 +47,6 @@ export async function GET(request: NextRequest) {
     rawPlan,
     cookieDestination,
     destination,
-    finalRedirect,
     appOrigin,
   })
 
@@ -64,7 +62,7 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const response = NextResponse.redirect(finalRedirect)
+  const response = NextResponse.redirect(appPathAt(appOrigin, destination))
   response.cookies.set(AUTH_POST_LOGIN_COOKIE, '', { path: '/', maxAge: 0 })
 
   const supabase = createServerClient(
@@ -96,6 +94,17 @@ export async function GET(request: NextRequest) {
         plan: rawPlan ?? undefined,
       })
     )
+  }
+
+  if (!cookieDestination && !rawNext) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    const intendedNext = user?.user_metadata?.intended_next
+    if (typeof intendedNext === 'string' && intendedNext.startsWith('/')) {
+      destination = resolveAuthNext({ next: intendedNext })
+      response.headers.set('Location', appPathAt(appOrigin, destination))
+    }
   }
 
   return response

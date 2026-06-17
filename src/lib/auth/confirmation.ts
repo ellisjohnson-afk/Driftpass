@@ -21,7 +21,7 @@ export function confirmationRedirectUrl(): string {
   return `${getClientAppOrigin()}/callback`
 }
 
-/** Password reset emails must include next= in the URL (requires callback/** in Supabase Redirect URLs). */
+/** Password reset — uses /callback?next=/reset-password (requires callback/** in Supabase Redirect URLs). */
 export function passwordRecoveryRedirectUrl(): string {
   const origin = getClientAppOrigin()
   return `${origin}/callback?next=${encodeURIComponent('/reset-password')}`

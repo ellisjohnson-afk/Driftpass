@@ -79,10 +79,10 @@ export function getOAuthCallbackUrl(): string {
   return appUrlAt(CANONICAL_APP_ORIGIN, '/callback')
 }
 
-export function setAuthPostLoginCookie(destination: string): void {
+export function setAuthPostLoginCookie(destination: string, maxAgeSeconds = 86400): void {
   if (typeof document === 'undefined') return
   const secure = window.location.protocol === 'https:' ? '; Secure' : ''
-  document.cookie = `${AUTH_POST_LOGIN_COOKIE}=${encodeURIComponent(destination)}; path=/; max-age=600; SameSite=Lax${secure}`
+  document.cookie = `${AUTH_POST_LOGIN_COOKIE}=${encodeURIComponent(destination)}; path=/; max-age=${maxAgeSeconds}; SameSite=Lax${secure}`
 }
 
 export function readAuthPostLoginCookie(cookieHeader: string | null | undefined): string | null {

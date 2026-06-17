@@ -14,7 +14,7 @@ import {
   AuthSecondaryButton,
   AuthShell,
 } from '@/components/auth/AuthShell'
-import { resolveAuthNext, withTimeout } from '@/lib/auth/helpers'
+import { resolveAuthNext, withTimeout, setAuthPostLoginCookie } from '@/lib/auth/helpers'
 import { confirmationRedirectUrl, formatSignInError, passwordRecoveryRedirectUrl } from '@/lib/auth/confirmation'
 
 const SIGN_IN_TIMEOUT_MS = 20_000
@@ -122,6 +122,7 @@ function LoginForm() {
     setInfo(null)
 
     const supabase = createClient()
+    setAuthPostLoginCookie('/reset-password')
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
       redirectTo: passwordRecoveryRedirectUrl(),
     })

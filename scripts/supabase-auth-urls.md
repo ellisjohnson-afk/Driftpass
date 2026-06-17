@@ -2,7 +2,7 @@
 
 **Critical:** If Site URL is `https://driftpass.vercel.app`, Google OAuth fails with `bad_oauth_state` because PKCE cookies are set on `www.driftpass.com.au` but errors redirect to the Vercel domain.
 
-**Critical:** `redirectTo` must match Redirect URLs **exactly**. Query params on `redirectTo` (e.g. `/callback?next=...`) are rejected and Supabase falls back to Site URL (`/?code=...`). The app sends `redirectTo` as bare `/callback` and stores the post-login path in a cookie.
+**Auth emails:** connect Resend SMTP — see `scripts/supabase-auth-email-setup.md`.
 
 After running `node scripts/sync-vercel-env.mjs`, set these in Supabase Dashboard:
 
@@ -11,20 +11,24 @@ After running `node scripts/sync-vercel-env.mjs`, set these in Supabase Dashboar
 | Field | Value |
 |-------|--------|
 | Site URL | `https://www.driftpass.com.au` |
-| Redirect URLs | `https://www.driftpass.com.au/callback` |
+| Redirect URLs | see list below |
 
-Optional (only if you later add query params to redirectTo):
+Add **all** redirect URLs:
 
 ```
+https://www.driftpass.com.au/callback
 https://www.driftpass.com.au/callback/**
-https://www.driftpass.com.au/**
-```
-
-Also add (optional, if apex domain redirects):
-
-```
+https://www.driftpass.com.au/reset-password
 https://driftpass.com.au/callback
+http://localhost:3000/callback
+http://localhost:3000/callback/**
+http://localhost:3004/callback
+http://localhost:3004/callback/**
 ```
+
+The `callback/**` wildcard is **required** for password-reset links (`/callback?next=/reset-password`).
+
+OAuth and signup confirmation use bare `/callback` plus an `auth_post_login` cookie (or `intended_next` in user metadata).
 
 **Remove or do not use as Site URL:**
 

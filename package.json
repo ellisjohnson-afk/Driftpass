@@ -17,6 +17,7 @@
     "db:apply-008": "node scripts/apply-migration-008.mjs",
     "stripe:verify": "node scripts/verify-stripe-prices.mjs",
     "auth:link": "node scripts/generate-auth-link.mjs",
+    "email:verify": "node scripts/verify-resend.mjs",
     "test:pin": "node scripts/test-pin-windows.mjs",
     "test:e2e": "node scripts/e2e-checklist.mjs",
     "vercel:env": "node scripts/sync-vercel-env.mjs",

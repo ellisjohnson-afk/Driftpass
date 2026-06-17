@@ -14,7 +14,7 @@ import {
   AuthSecondaryButton,
   AuthShell,
 } from '@/components/auth/AuthShell'
-import { resolveAuthNext, sanitizePlanSlug, buildPricingCheckoutPath } from '@/lib/auth/helpers'
+import { resolveAuthNext, sanitizePlanSlug, buildPricingCheckoutPath, setAuthPostLoginCookie } from '@/lib/auth/helpers'
 import { confirmationRedirectUrl, isDuplicateSignupUser } from '@/lib/auth/confirmation'
 import { cn } from '@/lib/utils/cn'
 
@@ -44,12 +44,13 @@ function SignupForm() {
     setError(null)
 
     const supabase = createClient()
+    setAuthPostLoginCookie(postAuthNext)
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: name },
-        emailRedirectTo: `${window.location.origin}/callback`,
+        data: { full_name: name, intended_next: postAuthNext },
+        emailRedirectTo: confirmationRedirectUrl(),
       },
     })
 
