@@ -98,7 +98,8 @@ Production test:
 | Email in spam | Complete DKIM/SPF/DMARC in Resend; use verified domain sender |
 | Link opens homepage with `?code=` | Add `callback/**` to Redirect URLs; Site URL must be `www.driftpass.com.au` |
 | Reset link does not show reset form | Redirect must include `next=/reset-password`; see callback route |
-| `Error sending recovery email` | Resend domain not verified or wrong API key in SMTP password field |
+| Gmail red banner — link won't click | Click **Looks safe** on the banner, or copy the plain URL from the email body. Paste branded templates from `docs/supabase/email-templates.md` to reduce false positives. |
+| Test email (`+test`) not visible | Gmail delivers `you+test@gmail.com` to the same inbox — search `from:hello@driftpass.com.au` |
 
 ## Env vars (Vercel + local)
 

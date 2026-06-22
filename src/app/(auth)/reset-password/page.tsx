@@ -46,7 +46,7 @@ function ResetPasswordForm() {
       if (session) {
         setReady(true)
       } else {
-        setError('Use Forgot password on the login page to get a reset link, then open it from your email.')
+        setError('Use the forgot password page to get a reset link, then open it from your email.')
       }
       setBootstrapping(false)
     }

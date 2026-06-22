@@ -32,7 +32,7 @@ export default async function TripHelpPage() {
   return (
     <div className="space-y-8 animate-fade-in pb-2">
       <header>
-        <p className="text-xs uppercase tracking-widest text-drift-gold-mid">Trips</p>
+        <p className="text-xs uppercase tracking-widest text-drift-gold-mid">Trip Help</p>
         <h1 className="mt-1 text-2xl font-bold">Trip Help</h1>
         <p className="mt-1 text-sm text-drift-text-muted">
           Traveller utilities and member marketplace deals.

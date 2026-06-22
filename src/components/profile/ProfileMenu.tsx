@@ -73,7 +73,13 @@ export function ProfileMenu({ showBilling = true, className }: ProfileMenuProps)
         />
       ) : null}
       <div className="border-t border-drift-border/60">
-        <MenuButton label="Notifications" disabled />
+        <a
+          href="/forgot-password"
+          className="flex w-full items-center justify-between px-4 py-4 text-left text-sm font-medium text-white transition-colors hover:bg-drift-navy/60"
+        >
+          <span>Change password</span>
+          <ChevronIcon />
+        </a>
       </div>
       {error ? <p className="px-4 pb-3 text-xs text-red-400">{error}</p> : null}
     </div>

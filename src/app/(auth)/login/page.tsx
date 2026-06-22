@@ -14,8 +14,8 @@ import {
   AuthSecondaryButton,
   AuthShell,
 } from '@/components/auth/AuthShell'
-import { resolveAuthNext, withTimeout, setAuthPostLoginCookie } from '@/lib/auth/helpers'
-import { confirmationRedirectUrl, formatSignInError, passwordRecoveryRedirectUrl } from '@/lib/auth/confirmation'
+import { resolveAuthNext, withTimeout } from '@/lib/auth/helpers'
+import { confirmationRedirectUrl, formatSignInError } from '@/lib/auth/confirmation'
 
 const SIGN_IN_TIMEOUT_MS = 20_000
 
@@ -26,7 +26,6 @@ function LoginForm() {
   const [info, setInfo] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
-  const [resetting, setResetting] = useState(false)
   const searchParams = useSearchParams()
   const plan = searchParams.get('plan')
   const next = resolveAuthNext({
@@ -110,33 +109,6 @@ function LoginForm() {
     setInfo('Confirmation email sent. Check your inbox and spam folder, then sign in.')
   }
 
-  async function handleForgotPassword() {
-    const trimmed = email.trim()
-    if (!trimmed) {
-      setError('Enter your email above, then use Forgot password.')
-      return
-    }
-
-    setResetting(true)
-    setError(null)
-    setInfo(null)
-
-    const supabase = createClient()
-    setAuthPostLoginCookie('/reset-password')
-    const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmed, {
-      redirectTo: passwordRecoveryRedirectUrl(),
-    })
-
-    setResetting(false)
-
-    if (resetError) {
-      setError(resetError.message)
-      return
-    }
-
-    setInfo('Password reset email sent. Open the link, set a new password on the reset page, then sign in.')
-  }
-
   return (
     <AuthShell>
       <AuthCard title="Welcome back" subtitle="Sign in to open your pass and member deals.">
@@ -170,36 +142,28 @@ function LoginForm() {
             placeholder="you@email.com"
           />
 
-          <div>
-            <div className="mb-1.5 flex items-center justify-between">
-              <label className="block text-sm text-drift-text-muted">Password</label>
-              <button
-                type="button"
-                onClick={() => {
-                  void handleForgotPassword()
-                }}
-                disabled={loading || resetting}
-                className="text-xs font-semibold text-drift-gold-mid hover:text-white disabled:opacity-50"
-              >
-                {resetting ? 'Sending…' : 'Forgot password?'}
-              </button>
-            </div>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              autoComplete="current-password"
-              disabled={loading}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-drift-border bg-drift-navy-deep px-4 py-3 text-white placeholder:text-drift-text-subtle transition-colors focus:border-drift-gold-to/50 focus:outline-none disabled:opacity-60"
-            />
-          </div>
+          <AuthInput
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            autoComplete="current-password"
+            disabled={loading}
+            placeholder="••••••••"
+          />
 
           <AuthPrimaryButton type="submit" disabled={loading} loading={loading}>
             {loading ? 'Signing in…' : 'Sign in with email'}
           </AuthPrimaryButton>
         </form>
+
+        <Link
+          href="/forgot-password"
+          className="mt-4 flex w-full items-center justify-center rounded-2xl border border-drift-border bg-drift-navy-deep px-4 py-3 text-sm font-semibold text-drift-gold-mid transition-colors hover:border-drift-gold-to/40 hover:text-white"
+        >
+          Forgot password?
+        </Link>
 
         <AuthSecondaryButton
           type="button"

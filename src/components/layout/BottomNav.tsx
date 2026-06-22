@@ -32,7 +32,7 @@ function CompassIcon() {
   )
 }
 
-function MapIcon() {
+function TripHelpIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -42,8 +42,8 @@ function MapIcon() {
       className="h-6 w-6"
       aria-hidden
     >
-      <path d="M3 6.5 9 4.5l6 2 6-2v13l-6 2-6-2-6 2V6.5Z" />
-      <path d="M9 4.5v13M15 6.5v13" />
+      <path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" />
+      <circle cx="12" cy="11" r="2.25" />
     </svg>
   )
 }
@@ -64,13 +64,26 @@ function ProfileIcon() {
   )
 }
 
-function PassFabIcon() {
+function PassCardIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-7 w-7" aria-hidden>
-      <rect x="4" y="4" width="6" height="6" rx="1" fill="currentColor" />
-      <rect x="14" y="4" width="6" height="6" rx="1" fill="currentColor" />
-      <rect x="4" y="14" width="6" height="6" rx="1" fill="currentColor" />
-      <rect x="14" y="14" width="6" height="6" rx="1" fill="currentColor" />
+      <rect
+        x="3"
+        y="6"
+        width="18"
+        height="12"
+        rx="2.5"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <path d="M3 10h18" stroke="currentColor" strokeWidth="1.75" />
+      <circle cx="7.5" cy="14" r="1.25" fill="currentColor" />
+      <path
+        d="M11 14h6"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -80,24 +93,71 @@ function NavItem({
   label,
   active,
   icon,
+  multiline = false,
 }: {
   href: string
   label: string
   active: boolean
   icon: ReactNode
+  multiline?: boolean
 }) {
   return (
     <Link
       href={href}
       className={cn(
-        'flex flex-col items-center justify-end gap-1 pb-3 text-[10px] font-medium uppercase tracking-wide transition-colors',
+        'flex min-h-[3.25rem] flex-col items-center justify-end gap-1 pb-3 transition-colors',
         active ? 'text-drift-gold-mid' : 'text-drift-text-muted hover:text-white'
       )}
       aria-current={active ? 'page' : undefined}
     >
       {icon}
-      {label}
+      <span
+        className={cn(
+          'text-center font-semibold uppercase tracking-wide',
+          multiline ? 'max-w-[4.25rem] text-[9px] leading-[1.15]' : 'text-[10px]'
+        )}
+      >
+        {multiline && label.includes(' ') ? (
+          <>
+            {label.split(' ').map((word) => (
+              <span key={word} className="block">
+                {word}
+              </span>
+            ))}
+          </>
+        ) : (
+          label
+        )}
+      </span>
     </Link>
+  )
+}
+
+function PassNavButton({ href, active }: { href: string; active: boolean }) {
+  return (
+    <div className="flex flex-col items-center justify-end gap-1.5 pb-3">
+      <Link
+        href={href}
+        className={cn(
+          '-mt-7 flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-full bg-drift-gold-gradient text-drift-navy-deep shadow-drift-fab ring-2 transition-transform hover:scale-105',
+          active
+            ? 'ring-drift-gold-to/60'
+            : 'ring-drift-navy-deep'
+        )}
+        aria-label="Show my pass"
+        aria-current={active ? 'page' : undefined}
+      >
+        <PassCardIcon />
+      </Link>
+      <span
+        className={cn(
+          'text-[10px] font-bold uppercase tracking-wide',
+          active ? 'text-drift-gold-mid' : 'text-drift-text-muted'
+        )}
+      >
+        My Pass
+      </span>
+    </div>
   )
 }
 
@@ -128,7 +188,7 @@ export function BottomNav({
       )}
       aria-label="Main navigation"
     >
-      <div className="relative mx-auto grid h-[4.5rem] max-w-lg grid-cols-4 items-end px-2">
+      <div className="relative mx-auto grid h-[5rem] max-w-lg grid-cols-4 items-end px-1">
         <NavItem
           href={exploreHref}
           label="Explore"
@@ -138,24 +198,13 @@ export function BottomNav({
 
         <NavItem
           href={tripsHref}
-          label="Trips"
+          label="Trip Help"
           active={active === 'trips'}
-          icon={<MapIcon />}
+          icon={<TripHelpIcon />}
+          multiline
         />
 
-        <div className="relative flex justify-center">
-          <Link
-            href={passHref}
-            className={cn(
-              'absolute bottom-3 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-full bg-drift-gold-gradient text-drift-navy-deep shadow-drift-fab transition-transform hover:scale-105',
-              active === 'pass' && 'ring-2 ring-drift-gold-to/50'
-            )}
-            aria-label="Show my pass"
-            aria-current={active === 'pass' ? 'page' : undefined}
-          >
-            <PassFabIcon />
-          </Link>
-        </div>
+        <PassNavButton href={passHref} active={active === 'pass'} />
 
         <NavItem
           href={profileHref}

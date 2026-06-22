@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
     const errorDescription = request.nextUrl.searchParams.get('error_description')
     const detail =
       errorCode === 'otp_expired'
-        ? 'This link has expired. Request a new password reset from the login page.'
+        ? 'This link has expired. Request a new password reset from the forgot password page.'
         : (errorDescription ?? request.nextUrl.searchParams.get('error') ?? 'auth_callback_error')
     return NextResponse.redirect(
       appUrlAt(appOrigin, '/login', {

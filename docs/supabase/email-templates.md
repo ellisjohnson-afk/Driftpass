@@ -22,6 +22,12 @@ Use the default subject lines or:
      style="display: inline-block; background: linear-gradient(135deg, #e8c872, #f5d78e, #c9a227); color: #0a1628; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px;">
     Confirm email
   </a>
+  <p style="margin: 24px 0 0; font-size: 13px; line-height: 1.6; color: #9ca3af;">
+    Button not working? Copy and paste this link into your browser:
+  </p>
+  <p style="margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: #6b7280; word-break: break-all;">
+    {{ .ConfirmationURL }}
+  </p>
   <p style="margin: 28px 0 0; font-size: 13px; line-height: 1.6; color: #6b7280;">
     If you did not create a DriftPass account, you can ignore this email.
   </p>
@@ -43,6 +49,12 @@ Use the default subject lines or:
      style="display: inline-block; background: linear-gradient(135deg, #e8c872, #f5d78e, #c9a227); color: #0a1628; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px;">
     Reset password
   </a>
+  <p style="margin: 24px 0 0; font-size: 13px; line-height: 1.6; color: #9ca3af;">
+    Button not working? Copy and paste this link into your browser:
+  </p>
+  <p style="margin: 8px 0 0; font-size: 12px; line-height: 1.5; color: #6b7280; word-break: break-all;">
+    {{ .ConfirmationURL }}
+  </p>
   <p style="margin: 28px 0 0; font-size: 13px; line-height: 1.6; color: #6b7280;">
     If you did not request this, you can safely ignore this email. Your password will not change.
   </p>
