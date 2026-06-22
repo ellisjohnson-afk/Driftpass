@@ -72,6 +72,7 @@ export function AppShell({
           exploreHref={exploreHref}
           passHref={passHref}
           tripsHref={tripsHref}
+          profileHref={profileHref}
         />
       )}
     </div>
