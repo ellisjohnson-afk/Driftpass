@@ -5,7 +5,8 @@ import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { CollectionReceiptCard } from '@/components/orders'
 import { formatDate } from '@/lib/utils/format'
-import type { OrderVoucherWithPartner } from '@/lib/orders/types'
+import { fetchUserOrders } from '@/lib/orders/fetch-orders'
+import type { OrderVoucher } from '@/lib/orders/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,15 +28,9 @@ export default async function TripHelpOrdersPage({
     redirect(`/trip-help/receipt?session_id=${encodeURIComponent(sessionId)}`)
   }
 
-  const { data: orders, error } = await supabase
-    .from('order_vouchers')
-    .select('*, partners(name, slug, address, city)')
-    .eq('user_id', user.id)
-    .in('status', ['paid', 'collected', 'expired'])
-    .order('created_at', { ascending: false })
-    .limit(20)
+  const { data: orders, error } = await fetchUserOrders(supabase, user.id)
 
-  const list = (orders ?? []) as OrderVoucherWithPartner[]
+  const list = orders
 
   return (
     <div className="animate-fade-in space-y-6 pb-4">
@@ -70,8 +65,7 @@ export default async function TripHelpOrdersPage({
         </div>
       ) : (
         <div className="space-y-3">
-          {list.map((order) => {
-            const partner = order.partners
+          {list.map((order: OrderVoucher) => {
             const isActive = order.status === 'paid' && order.expires_at > new Date().toISOString()
 
             return (
@@ -84,7 +78,7 @@ export default async function TripHelpOrdersPage({
                   <div>
                     <p className="font-semibold text-white">{order.product_name}</p>
                     <p className="mt-1 text-sm text-drift-text-muted">
-                      {partner?.name ?? 'Partner'} · ${(order.amount_aud_cents / 100).toFixed(2)}
+                      ${(order.amount_aud_cents / 100).toFixed(2)}
                     </p>
                     <p className="mt-1 text-xs text-drift-text-subtle">
                       {order.status === 'collected'

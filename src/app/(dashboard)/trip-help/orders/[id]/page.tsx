@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { CollectionReceiptCard } from '@/components/orders'
-import type { OrderVoucherWithPartner } from '@/lib/orders/types'
+import { fetchUserOrderById } from '@/lib/orders/fetch-orders'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,16 +21,10 @@ export default async function TripHelpOrderDetailPage({
 
   if (!user) redirect(appUrlAt(appOrigin, '/login', { next: `/trip-help/orders/${params.id}` }))
 
-  const { data: order } = await supabase
-    .from('order_vouchers')
-    .select('*, partners(name, slug, address, city)')
-    .eq('id', params.id)
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const voucher = await fetchUserOrderById(supabase, user.id, params.id)
 
-  if (!order) notFound()
+  if (!voucher) notFound()
 
-  const voucher = order as OrderVoucherWithPartner
   const partner = voucher.partners
   const now = new Date().toISOString()
   const displayStatus =

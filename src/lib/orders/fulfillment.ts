@@ -141,12 +141,22 @@ export async function collectOrderByPin(pin: string) {
 
   const { data: order } = await admin
     .from('order_vouchers')
-    .select('*, partners(name, slug, address, city)')
+    .select('*')
     .eq('collection_pin', cleanPin)
     .maybeSingle()
 
   if (!order) {
     return { error: 'Invalid collection PIN', status: 404 as const }
+  }
+
+  let partnerName = 'Partner'
+  if (order.partner_id) {
+    const { data: partner } = await admin
+      .from('partners')
+      .select('name')
+      .eq('id', order.partner_id)
+      .maybeSingle()
+    if (partner?.name) partnerName = partner.name
   }
 
   if (order.status === 'collected') {
@@ -185,7 +195,7 @@ export async function collectOrderByPin(pin: string) {
       productName: order.product_name,
       memberName: profile?.full_name ?? 'DriftPass Member',
       amountAudCents: order.amount_aud_cents,
-      partnerName: (order.partners as { name?: string } | null)?.name ?? 'Partner',
+      partnerName,
     },
   }
 }
