@@ -28,6 +28,7 @@ const checks = [
   { name: 'Marketing landing', path: '/', expectStatus: 200 },
   { name: 'Signup page', path: '/signup', expectStatus: 200 },
   { name: 'Login page', path: '/login', expectStatus: 200 },
+  { name: 'Forgot password', path: '/forgot-password', expectStatus: 200 },
   { name: 'Terms page', path: '/terms', expectStatus: 200 },
   { name: 'Partner scan (public)', path: '/scan', expectStatus: 200 },
   { name: 'Public partners API', path: '/api/partners/public', expectStatus: 200 },

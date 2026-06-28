@@ -7,6 +7,8 @@ import {
 } from '@/lib/auth/helpers'
 import { appPathAt, appUrlAt } from '@/lib/auth/canonical-url'
 import { getAppOriginFromRequest } from '@/lib/auth/app-origin'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { syncProfileFromUserMetadata } from '@/lib/auth/sync-profile-from-metadata'
 
 // Supabase OAuth callback + email confirmation links.
 // Session cookies must be written onto the redirect response (not cookieStore alone).
@@ -96,10 +98,20 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    try {
+      const admin = createAdminClient()
+      await syncProfileFromUserMetadata(admin, user)
+    } catch (syncError) {
+      console.error('[Auth callback] profile metadata sync failed:', syncError)
+    }
+  }
+
   if (!cookieDestination && !rawNext) {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
     const intendedNext = user?.user_metadata?.intended_next
     if (typeof intendedNext === 'string' && intendedNext.startsWith('/')) {
       destination = resolveAuthNext({ next: intendedNext })

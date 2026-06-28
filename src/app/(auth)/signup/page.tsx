@@ -49,7 +49,11 @@ function SignupForm() {
       email,
       password,
       options: {
-        data: { full_name: name, intended_next: postAuthNext },
+        data: {
+          full_name: name,
+          intended_next: postAuthNext,
+          ...(travellerType ? { traveller_type: travellerType } : {}),
+        },
         emailRedirectTo: confirmationRedirectUrl(),
       },
     })
