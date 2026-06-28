@@ -39,7 +39,26 @@ export async function fulfillOrderFromCheckoutSession(
   sessionId: string,
   expectedUserId?: string
 ): Promise<OrderVoucher | null> {
-  const session = await stripe.checkout.sessions.retrieve(sessionId)
+  let session: Stripe.Checkout.Session | null = null
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      session = await stripe.checkout.sessions.retrieve(sessionId)
+      if (session.payment_status === 'paid' || session.status === 'complete') break
+      lastError = new Error('Checkout session is not paid yet')
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error('Could not load checkout session')
+    }
+
+    if (attempt < 4) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+  }
+
+  if (!session) {
+    throw lastError ?? new Error('Could not load checkout session')
+  }
 
   if (session.mode !== 'payment') return null
   if (session.metadata?.orderType !== 'voucher') return null
@@ -55,10 +74,14 @@ export async function fulfillOrderFromCheckoutSession(
   if (existing) return existing as OrderVoucher
 
   if (session.payment_status !== 'paid' && session.status !== 'complete') {
-    throw new Error('Checkout session is not paid yet')
+    throw lastError ?? new Error('Checkout session is not paid yet')
   }
 
-  const userId = await resolveUserIdFromStripe(session)
+  const userId =
+    session.metadata?.userId ??
+    session.client_reference_id ??
+    (await resolveUserIdFromStripe(session))
+
   if (!userId) throw new Error('Checkout session missing user mapping')
   if (expectedUserId && userId !== expectedUserId) {
     throw new Error('Checkout session belongs to a different user')

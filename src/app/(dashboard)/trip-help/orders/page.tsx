@@ -9,7 +9,11 @@ import type { OrderVoucherWithPartner } from '@/lib/orders/types'
 
 export const dynamic = 'force-dynamic'
 
-export default async function TripHelpOrdersPage() {
+export default async function TripHelpOrdersPage({
+  searchParams,
+}: {
+  searchParams: { session_id?: string }
+}) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -18,7 +22,12 @@ export default async function TripHelpOrdersPage() {
 
   if (!user) redirect(appUrlAt(appOrigin, '/login', { next: '/trip-help/orders' }))
 
-  const { data: orders } = await supabase
+  const sessionId = searchParams.session_id
+  if (sessionId?.startsWith('cs_')) {
+    redirect(`/trip-help/receipt?session_id=${encodeURIComponent(sessionId)}`)
+  }
+
+  const { data: orders, error } = await supabase
     .from('order_vouchers')
     .select('*, partners(name, slug, address, city)')
     .eq('user_id', user.id)
@@ -42,6 +51,12 @@ export default async function TripHelpOrdersPage() {
           Paid add-ons with collection PINs for partner pickup
         </p>
       </div>
+
+      {error ? (
+        <div className="rounded-2xl border border-red-800/50 bg-red-900/20 px-4 py-3 text-sm text-red-300">
+          Could not load purchases. Refresh the page or try again shortly.
+        </div>
+      ) : null}
 
       {list.length === 0 ? (
         <div className="rounded-2xl border border-drift-border/60 bg-drift-navy-light px-6 py-10 text-center">
