@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils/cn'
 import { NoProviderEmptyState } from '@/components/ui'
+import { DirectionsButton } from '@/components/partner/DirectionsButton'
 import { ProductPurchaseButton } from '@/components/orders'
 import type { TripUtility } from '@/lib/trip-help/constants'
 import { TripUtilityIcon } from './UtilityTile'
@@ -48,6 +49,7 @@ export interface UtilityDetailContentProps {
   hoursSummary?: string
   isOpen?: boolean
   purchasable?: boolean
+  directionsUrl?: string
 }
 
 export function UtilityDetailContent({
@@ -59,6 +61,7 @@ export function UtilityDetailContent({
   hoursSummary,
   isOpen,
   purchasable = false,
+  directionsUrl,
 }: UtilityDetailContentProps) {
   return (
     <div className="animate-fade-in -mx-4 -mt-6 pb-4">
@@ -152,6 +155,10 @@ export function UtilityDetailContent({
             </span>
           </p>
         </div>
+
+        {directionsUrl ? (
+          <DirectionsButton directionsUrl={directionsUrl} className="mt-4" variant="secondary" />
+        ) : null}
 
         {purchasable ? (
           <ProductPurchaseButton

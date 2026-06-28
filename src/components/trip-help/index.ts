@@ -1,3 +1,5 @@
+export { EssentialsFaq, type EssentialsFaqProps } from './EssentialsFaq'
+export { TripHelpTabs, type TripHelpTab, type TripHelpTabsProps } from './TripHelpTabs'
 export { TripHelpMarketplace, type TripHelpMarketplaceProps } from './TripHelpMarketplace'
 export { TripHelpUtilityGrid, type TripHelpUtilityGridProps } from './TripHelpUtilityGrid'
 export { UtilityDetailContent, type UtilityDetailContentProps } from './UtilityDetailContent'

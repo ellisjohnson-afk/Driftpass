@@ -11,12 +11,14 @@ import { isLegacyPlanSlug } from '@/constants/plans'
 import { buildPricingCheckoutPath } from '@/lib/auth/helpers'
 import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getClientAppOrigin } from '@/lib/auth/app-origin'
+import type { TownSponsor } from '@/lib/towns/constants'
 
 type PricingClientProps = {
   /** Legacy ?plan= slug — auto-starts checkout without showing picker */
   initialPlan?: string | null
   backHref?: string
   isAuthenticated?: boolean
+  sponsors?: TownSponsor[]
 }
 
 function BackIcon() {
@@ -31,6 +33,7 @@ export default function PricingClient({
   initialPlan = null,
   backHref = '/',
   isAuthenticated = true,
+  sponsors = [],
 }: PricingClientProps) {
   const [loading, setLoading] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
@@ -122,7 +125,7 @@ export default function PricingClient({
 
         <MembershipPricingCard loading={loading} onStart={startMembership} />
 
-        <SponsorLogosSection />
+        <SponsorLogosSection sponsors={sponsors} />
 
         {!isAuthenticated ? (
           <p className="text-center text-sm text-drift-text-muted">

@@ -127,6 +127,14 @@ export function getPartnerMapUrl(lat: number, lng: number): string {
   return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`
 }
 
-export function getPartnerDirectionsUrl(lat: number, lng: number, name: string): string {
-  return `https://www.google.com/maps/search/?api=1&query=${lat}%2C${lng}&query_place_id=${encodeURIComponent(name)}`
+export function getPartnerDirectionsUrl(
+  lat: number,
+  lng: number,
+  name: string,
+  googlePlaceId?: string | null
+): string {
+  if (googlePlaceId) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${encodeURIComponent(googlePlaceId)}`
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name} @ ${lat},${lng}`)}`
 }

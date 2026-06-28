@@ -9,7 +9,6 @@ import { getPerkDiscountLabel, getPerkImageUrl } from '@/lib/perks/constants'
 import {
   getPartnerCategoryLabel,
   getPartnerDirectionsUrl,
-  getPartnerMapUrl,
   getPartnerOfferHeadline,
   resolvePartnerOpeningHours,
 } from '@/lib/partners/detail'
@@ -38,6 +37,9 @@ type PartnerDetailRow = {
   lat: number | null
   lng: number | null
   google_rating: number | null
+  lat: number | null
+  lng: number | null
+  google_place_id: string | null
   partner_services: Array<{ name: string; service_type: string; is_active: boolean }> | null
 }
 
@@ -78,7 +80,7 @@ export default async function PartnerDetailPage({
   const { data: partner } = await fetchPartnerBySlug<PartnerDetailRow>(
     admin,
     params.slug,
-    'id, name, slug, description, category, address, city, state, lat, lng, google_rating, partner_services(name, service_type, is_active)'
+    'id, name, slug, description, category, address, city, state, lat, lng, google_place_id, google_rating, partner_services(name, service_type, is_active)'
   )
 
   if (!partner) notFound()
@@ -133,8 +135,13 @@ export default async function PartnerDetailPage({
         {hasMap ? (
           <div className="mt-4">
             <PartnerMapPreview
-              mapEmbedUrl={getPartnerMapUrl(partner.lat!, partner.lng!)}
-              directionsUrl={getPartnerDirectionsUrl(partner.lat!, partner.lng!, partner.name)}
+              directionsUrl={getPartnerDirectionsUrl(
+                partner.lat!,
+                partner.lng!,
+                partner.name,
+                partner.google_place_id
+              )}
+              address={`${partner.address}, ${partner.city}, ${partner.state}`}
             />
           </div>
         ) : (

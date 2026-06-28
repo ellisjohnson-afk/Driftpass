@@ -7,7 +7,7 @@ import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getTripUtility } from '@/lib/trip-help/constants'
 import { getPurchasableTripHelpProduct } from '@/lib/orders/catalog'
-import { resolvePartnerOpeningHours } from '@/lib/partners/detail'
+import { resolvePartnerOpeningHours, getPartnerDirectionsUrl } from '@/lib/partners/detail'
 import { fetchPartnerBySlug } from '@/lib/partners/fetch'
 import { UtilityDetailContent } from '@/components/trip-help'
 
@@ -18,6 +18,9 @@ type TripHelpPartnerRow = {
   slug: string
   address: string
   city: string
+  lat: number | null
+  lng: number | null
+  google_place_id: string | null
   partner_services: Array<{ service_type: string; is_active: boolean }> | null
 }
 
@@ -52,7 +55,7 @@ export default async function UtilityDetailPage({
   const { data: partner } = await fetchPartnerBySlug<TripHelpPartnerRow>(
     admin,
     utility.partnerSlug,
-    'name, slug, address, city, partner_services(service_type, is_active)'
+    'name, slug, address, city, lat, lng, google_place_id, partner_services(service_type, is_active)'
   )
 
   const hours = partner
@@ -67,6 +70,16 @@ export default async function UtilityDetailPage({
 
   const purchasable = Boolean(getPurchasableTripHelpProduct(utility.slug) && partner && hasService)
 
+  const directionsUrl =
+    partner?.lat != null && partner?.lng != null
+      ? getPartnerDirectionsUrl(
+          partner.lat,
+          partner.lng,
+          partner.name,
+          partner.google_place_id
+        )
+      : undefined
+
   return (
     <UtilityDetailContent
       utility={utility}
@@ -79,6 +92,7 @@ export default async function UtilityDetailPage({
       hoursSummary={hours?.summary}
       isOpen={hours?.isOpen}
       purchasable={purchasable}
+      directionsUrl={directionsUrl}
     />
   )
 }

@@ -165,6 +165,7 @@ function resolveActiveTab(pathname: string): BottomNavTab | null {
   if (pathname.startsWith('/pass')) return 'pass'
   if (pathname.startsWith('/account')) return 'profile'
   if (pathname.startsWith('/perks')) return 'explore'
+  if (pathname.startsWith('/town')) return 'explore'
   if (pathname.startsWith('/trip-help')) return 'trips'
   if (pathname.startsWith('/dashboard') || pathname.startsWith('/home')) return 'explore'
   return null

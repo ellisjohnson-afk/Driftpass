@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { formatAUD } from '@/lib/utils/format'
 import type { FlashDeal } from '@/types'
@@ -21,20 +22,32 @@ export default async function FlashPage() {
     .order('expires_at', { ascending: true })
 
   return (
-    <div className="space-y-4 animate-fade-in">
+    <div className="animate-fade-in space-y-4 pb-2">
       <div className="flex items-center gap-2">
-        <span className="text-2xl">⚡</span>
+        <span className="text-2xl" aria-hidden>
+          ⚡
+        </span>
         <div>
           <h1 className="text-xl font-bold">Flash Passes</h1>
-          <p className="text-xs text-[#6B7280]">Last-minute deals · updated daily</p>
+          <p className="text-xs text-drift-text-muted">Last-minute deals · updated daily</p>
         </div>
       </div>
 
-      {(!deals || deals.length === 0) ? (
-        <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-8 text-center">
-          <div className="text-4xl mb-3">⚡</div>
-          <p className="text-[#9CA3AF]">No flash deals right now</p>
-          <p className="text-sm text-[#6B7280] mt-1">Check back tonight — deals drop at 6pm</p>
+      {!deals || deals.length === 0 ? (
+        <div className="rounded-2xl border border-drift-border/60 bg-drift-navy-light px-6 py-10 text-center">
+          <div className="mb-3 text-4xl" aria-hidden>
+            ⚡
+          </div>
+          <p className="text-sm text-drift-text-muted">No flash deals right now</p>
+          <p className="mt-1 text-sm text-drift-text-subtle">
+            Check back tonight — deals drop at 6pm
+          </p>
+          <Link
+            href="/town/airlie-beach"
+            className="mt-4 inline-flex text-sm font-semibold text-drift-gold-mid hover:text-white"
+          >
+            ← Back to Airlie Beach guide
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
@@ -55,28 +68,29 @@ function FlashDealCard({ deal }: { deal: FlashDeal }) {
   )
 
   const expiresAt = new Date(deal.expires_at)
-  const now = new Date()
-  const hoursLeft = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60))
-  const minutesLeft = Math.floor((expiresAt.getTime() - now.getTime()) / (1000 * 60)) % 60
+  const hoursLeft = Math.floor((expiresAt.getTime() - Date.now()) / (1000 * 60 * 60))
+  const minutesLeft = Math.floor((expiresAt.getTime() - Date.now()) / (1000 * 60)) % 60
 
   const partner = deal.partner as { name?: string; city?: string } | undefined
 
   return (
-    <div className="bg-[#1A1A1A] border border-[#FF6B35]/40 rounded-xl p-5">
-      <div className="flex items-start justify-between mb-3">
+    <div className="rounded-2xl border border-orange-500/40 bg-drift-navy-light p-5">
+      <div className="mb-3 flex items-start justify-between">
         <div>
-          <div className="text-xs text-[#FF6B35] font-semibold uppercase tracking-wide mb-1">
+          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-orange-400">
             ⚡ Flash Deal
           </div>
-          <h3 className="font-bold">{deal.title}</h3>
-          <p className="text-sm text-[#9CA3AF]">{partner?.name} · {partner?.city}</p>
+          <h3 className="font-bold text-white">{deal.title}</h3>
+          <p className="text-sm text-drift-text-muted">
+            {partner?.name} · {partner?.city}
+          </p>
         </div>
-        <div className="bg-[#FF6B35] text-white text-sm font-bold px-3 py-1 rounded-full">
+        <div className="rounded-full bg-orange-500 px-3 py-1 text-sm font-bold text-white">
           -{discount}%
         </div>
       </div>
 
-      <p className="text-sm text-[#9CA3AF] mb-4">{deal.description}</p>
+      <p className="mb-4 text-sm text-drift-text-muted">{deal.description}</p>
 
       <div className="flex items-center justify-between">
         <div>
@@ -84,24 +98,28 @@ function FlashDealCard({ deal }: { deal: FlashDeal }) {
             <span className="text-xl font-bold text-white">
               {formatAUD(deal.subscriber_price_aud_cents)}
             </span>
-            <span className="text-sm text-[#6B7280] line-through">
+            <span className="text-sm text-drift-text-subtle line-through">
               {formatAUD(deal.original_price_aud_cents)}
             </span>
           </div>
-          <div className="text-xs text-[#6B7280] mt-0.5">
+          <div className="mt-0.5 text-xs text-drift-text-muted">
             {deal.seats_remaining} seat{deal.seats_remaining !== 1 ? 's' : ''} left
           </div>
         </div>
 
         <div className="text-right">
-          <div className="text-xs text-[#6B7280]">Expires in</div>
-          <div className="text-sm font-mono text-[#FF6B35] font-bold flash-pulse">
-            {hoursLeft > 0 ? `${hoursLeft}h ` : ''}{minutesLeft}m
+          <div className="text-xs text-drift-text-muted">Expires in</div>
+          <div className="flash-pulse font-mono text-sm font-bold text-orange-400">
+            {hoursLeft > 0 ? `${hoursLeft}h ` : ''}
+            {minutesLeft}m
           </div>
         </div>
       </div>
 
-      <button className="w-full mt-4 bg-[#FF6B35] text-white py-3 rounded-lg font-bold hover:bg-[#E55A25] transition-colors">
+      <button
+        type="button"
+        className="mt-4 w-full rounded-2xl bg-orange-500 py-3 font-bold text-white transition-colors hover:bg-orange-600"
+      >
         Book Now
       </button>
     </div>
@@ -110,12 +128,21 @@ function FlashDealCard({ deal }: { deal: FlashDeal }) {
 
 function ComingSoon() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4 animate-fade-in">
-      <div className="text-5xl mb-4">⚡</div>
-      <h1 className="text-2xl font-bold mb-2">Flash Passes</h1>
-      <p className="text-[#9CA3AF] max-w-xs">
-        Last-minute tour seats at 10% off. Launching in Phase 3 — coming soon.
+    <div className="flex min-h-[60vh] animate-fade-in flex-col items-center justify-center px-4 text-center">
+      <div className="mb-4 text-5xl" aria-hidden>
+        ⚡
+      </div>
+      <h1 className="mb-2 text-2xl font-bold">Flash Passes</h1>
+      <p className="max-w-xs text-drift-text-muted">
+        Last-minute tour seats at member prices. Launching soon — check the Airlie Beach guide for
+        tour highlights in the meantime.
       </p>
+      <Link
+        href="/town/airlie-beach"
+        className="mt-6 rounded-2xl bg-drift-gold-gradient px-5 py-2.5 text-sm font-bold text-drift-navy-deep"
+      >
+        Airlie Beach guide
+      </Link>
     </div>
   )
 }

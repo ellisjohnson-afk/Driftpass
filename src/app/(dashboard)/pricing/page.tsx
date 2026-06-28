@@ -5,6 +5,7 @@ import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { sanitizePlanSlug } from '@/lib/auth/helpers'
 import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
+import { getTownSponsors } from '@/lib/towns'
 import PricingClient from './PricingClient'
 
 export const dynamic = 'force-dynamic'
@@ -16,11 +17,12 @@ export default async function PricingPage({
 }) {
   const plan = sanitizePlanSlug(searchParams.plan)
   const appOrigin = await getServerAppOrigin()
+  const sponsors = getTownSponsors('airlie-beach')
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return <PricingClient initialPlan={plan} backHref="/" isAuthenticated={false} />
+    return <PricingClient initialPlan={plan} backHref="/" isAuthenticated={false} sponsors={sponsors} />
   }
 
   const admin = createAdminClient()
@@ -33,5 +35,5 @@ export default async function PricingPage({
 
   if (sub) redirect(appUrlAt(appOrigin, '/account'))
 
-  return <PricingClient initialPlan={plan} backHref="/account" isAuthenticated />
+  return <PricingClient initialPlan={plan} backHref="/account" isAuthenticated sponsors={sponsors} />
 }

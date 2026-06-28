@@ -5,7 +5,9 @@ import { redirect } from 'next/navigation'
 import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
-import { TripHelpMarketplace, TripHelpUtilityGrid } from '@/components/trip-help'
+import { getTown } from '@/lib/towns'
+import { TripHelpMarketplace, TripHelpUtilityGrid, TripHelpTabs, EssentialsFaq } from '@/components/trip-help'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +32,9 @@ export default async function TripHelpPage() {
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
+  const town = getTown('airlie-beach')
+  const essentials = town?.essentials ?? []
+
   return (
     <div className="space-y-8 animate-fade-in pb-2">
       <header className="flex items-start justify-between gap-4">
@@ -37,7 +42,7 @@ export default async function TripHelpPage() {
           <p className="text-xs uppercase tracking-widest text-drift-gold-mid">Trip Help</p>
           <h1 className="mt-1 text-2xl font-bold">Trip Help</h1>
           <p className="mt-1 text-sm text-drift-text-muted">
-            Traveller utilities and member marketplace deals.
+            Traveller utilities and local essentials for Airlie Beach.
           </p>
         </div>
         <Link
@@ -48,8 +53,17 @@ export default async function TripHelpPage() {
         </Link>
       </header>
 
-      <TripHelpUtilityGrid />
-      <TripHelpMarketplace />
+      <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-drift-navy-light" />}>
+        <TripHelpTabs
+          utilities={
+            <div className="space-y-8">
+              <TripHelpUtilityGrid />
+              <TripHelpMarketplace />
+            </div>
+          }
+          essentials={<EssentialsFaq items={essentials} />}
+        />
+      </Suspense>
     </div>
   )
 }

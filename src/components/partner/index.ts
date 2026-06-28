@@ -1,3 +1,4 @@
+export { DirectionsButton, type DirectionsButtonProps } from './DirectionsButton'
 export { PartnerHero, type PartnerHeroProps } from './PartnerHero'
 export { PartnerMapPreview, type PartnerMapPreviewProps } from './PartnerMapPreview'
 export { PartnerOfferCard, type PartnerOfferCardProps } from './PartnerOfferCard'

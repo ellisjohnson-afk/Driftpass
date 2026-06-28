@@ -73,6 +73,19 @@ export default async function HomePage() {
         </p>
       </header>
 
+      <Link
+        href="/town/airlie-beach"
+        className="block rounded-2xl border border-drift-gold-to/30 bg-drift-gold-gradient/10 px-4 py-4 transition-colors hover:border-drift-gold-to/50"
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-drift-gold-mid">
+          Airlie Beach
+        </p>
+        <p className="mt-1 text-lg font-bold text-white">Welcome guide</p>
+        <p className="mt-1 text-sm text-drift-text-muted">
+          Tour highlights, local FAQ, and quick links for your stay
+        </p>
+      </Link>
+
       <Link href="/pass" className="block transition-transform hover:scale-[1.01]">
         <MembershipCard
           variant="compact"
