@@ -37,8 +37,6 @@ type PartnerDetailRow = {
   lat: number | null
   lng: number | null
   google_rating: number | null
-  lat: number | null
-  lng: number | null
   google_place_id: string | null
   partner_services: Array<{ name: string; service_type: string; is_active: boolean }> | null
 }

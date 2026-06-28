@@ -10,7 +10,7 @@ export interface EssentialsFaqProps {
 }
 
 export function EssentialsFaq({ items, className }: EssentialsFaqProps) {
-  const categories = [...new Set(items.map((item) => item.category))]
+  const categories = Array.from(new Set(items.map((item) => item.category)))
 
   return (
     <div className={cn('space-y-6', className)}>
