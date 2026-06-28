@@ -363,6 +363,78 @@ export interface Database {
           }
         ]
       }
+      order_vouchers: {
+        Row: {
+          id: string
+          user_id: string
+          partner_id: string | null
+          partner_service_id: string | null
+          product_type: string
+          product_slug: string
+          product_name: string
+          amount_aud_cents: number
+          collection_pin: string
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          expires_at: string
+          collected_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          partner_id?: string | null
+          partner_service_id?: string | null
+          product_type: string
+          product_slug: string
+          product_name: string
+          amount_aud_cents: number
+          collection_pin: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          expires_at: string
+          collected_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          partner_id?: string | null
+          partner_service_id?: string | null
+          product_type?: string
+          product_slug?: string
+          product_name?: string
+          amount_aud_cents?: number
+          collection_pin?: string
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          expires_at?: string
+          collected_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_vouchers_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_vouchers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       redemptions: {
         Row: {
           id: string

@@ -6,6 +6,7 @@ import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getTripUtility } from '@/lib/trip-help/constants'
+import { getPurchasableTripHelpProduct } from '@/lib/orders/catalog'
 import { resolvePartnerOpeningHours } from '@/lib/partners/detail'
 import { fetchPartnerBySlug } from '@/lib/partners/fetch'
 import { UtilityDetailContent } from '@/components/trip-help'
@@ -64,6 +65,8 @@ export default async function UtilityDetailPage({
       (service) => service.service_type === utility.serviceType && service.is_active
     )
 
+  const purchasable = Boolean(getPurchasableTripHelpProduct(utility.slug) && partner && hasService)
+
   return (
     <UtilityDetailContent
       utility={utility}
@@ -75,6 +78,7 @@ export default async function UtilityDetailPage({
       isAvailable={Boolean(partner && hasService)}
       hoursSummary={hours?.summary}
       isOpen={hours?.isOpen}
+      purchasable={purchasable}
     />
   )
 }

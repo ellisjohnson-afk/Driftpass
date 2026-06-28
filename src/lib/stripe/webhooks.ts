@@ -8,6 +8,7 @@ import {
   requirePlanDefinitionBySlug,
   resolveUserIdFromStripe,
 } from '@/lib/stripe/activation'
+import { fulfillOrderFromCheckoutSession } from '@/lib/orders/fulfillment'
 
 // ============================================================
 // Stripe Webhook Event Handlers
@@ -18,6 +19,12 @@ import {
 export async function handleCheckoutSessionCompleted(
   session: Stripe.Checkout.Session
 ) {
+  if (session.mode === 'payment' && session.metadata?.orderType === 'voucher') {
+    await fulfillOrderFromCheckoutSession(session.id)
+    console.log('[Webhook] order voucher fulfilled', { sessionId: session.id })
+    return
+  }
+
   if (session.mode !== 'subscription') return
 
   const userId = await resolveUserIdFromStripe(session)

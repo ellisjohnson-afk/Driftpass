@@ -46,6 +46,7 @@ Manual partner flow:
 |-----------|---------|------|
 | 008 | `npm run db:apply-008` | Partner opening hours |
 | 011 | Run `supabase/migrations/011_profile_metadata_sync.sql` in SQL editor | Traveller type + Google avatar on signup |
+| 012 | Run `supabase/migrations/012_order_vouchers.sql` in SQL editor | Paid Trip Help orders + collection PINs |
 | 007 | `npm run db:apply-007` | Avatar uploads (optional) |
 
 ## 5. Done when

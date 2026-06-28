@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { TRIP_MARKETPLACE } from '@/lib/trip-help/constants'
+import { getPurchasableMarketplaceProduct } from '@/lib/orders/catalog'
 import { cn } from '@/lib/utils/cn'
 
 export interface TripHelpMarketplaceProps {
@@ -15,10 +16,14 @@ export function TripHelpMarketplace({ className }: TripHelpMarketplaceProps) {
       </div>
 
       <div className="space-y-3">
-        {TRIP_MARKETPLACE.map((item) => (
+        {TRIP_MARKETPLACE.map((item) => {
+          const purchasable = Boolean(getPurchasableMarketplaceProduct(item.slug))
+          const href = purchasable ? `/trip-help/marketplace/${item.slug}` : item.href
+
+          return (
           <Link
             key={item.slug}
-            href={item.href}
+            href={href}
             className="flex items-center gap-3 rounded-2xl border border-drift-border/60 bg-drift-navy-light px-4 py-4 transition-colors hover:border-drift-gold-to/35"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-drift-navy text-xl" aria-hidden>
@@ -30,7 +35,8 @@ export function TripHelpMarketplace({ className }: TripHelpMarketplaceProps) {
             </div>
             <span className="shrink-0 text-sm font-bold text-drift-gold-mid">{item.priceLabel}</span>
           </Link>
-        ))}
+          )
+        })}
       </div>
     </section>
   )

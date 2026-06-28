@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { redirect } from 'next/navigation'
@@ -31,12 +32,20 @@ export default async function TripHelpPage() {
 
   return (
     <div className="space-y-8 animate-fade-in pb-2">
-      <header>
-        <p className="text-xs uppercase tracking-widest text-drift-gold-mid">Trip Help</p>
-        <h1 className="mt-1 text-2xl font-bold">Trip Help</h1>
-        <p className="mt-1 text-sm text-drift-text-muted">
-          Traveller utilities and member marketplace deals.
-        </p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-drift-gold-mid">Trip Help</p>
+          <h1 className="mt-1 text-2xl font-bold">Trip Help</h1>
+          <p className="mt-1 text-sm text-drift-text-muted">
+            Traveller utilities and member marketplace deals.
+          </p>
+        </div>
+        <Link
+          href="/trip-help/orders"
+          className="shrink-0 rounded-xl border border-drift-border px-3 py-2 text-xs font-semibold text-drift-gold-mid transition-colors hover:border-drift-gold-to/40 hover:text-white"
+        >
+          My purchases
+        </Link>
       </header>
 
       <TripHelpUtilityGrid />

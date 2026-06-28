@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils/cn'
 import { NoProviderEmptyState } from '@/components/ui'
+import { ProductPurchaseButton } from '@/components/orders'
 import type { TripUtility } from '@/lib/trip-help/constants'
 import { TripUtilityIcon } from './UtilityTile'
 
@@ -46,6 +47,7 @@ export interface UtilityDetailContentProps {
   isAvailable?: boolean
   hoursSummary?: string
   isOpen?: boolean
+  purchasable?: boolean
 }
 
 export function UtilityDetailContent({
@@ -56,6 +58,7 @@ export function UtilityDetailContent({
   isAvailable = true,
   hoursSummary,
   isOpen,
+  purchasable = false,
 }: UtilityDetailContentProps) {
   return (
     <div className="animate-fade-in -mx-4 -mt-6 pb-4">
@@ -150,12 +153,21 @@ export function UtilityDetailContent({
           </p>
         </div>
 
-        <Link
-          href="/pass"
-          className="mt-6 flex w-full items-center justify-center rounded-2xl bg-drift-gold-gradient px-6 py-4 text-base font-bold text-drift-navy-deep shadow-drift-card transition-all hover:brightness-105"
-        >
-          Show pass to redeem
-        </Link>
+        {purchasable ? (
+          <ProductPurchaseButton
+            productType="trip_help"
+            productSlug={utility.slug}
+            priceLabel={utility.priceLabel}
+            className="mt-6"
+          />
+        ) : (
+          <Link
+            href="/pass"
+            className="mt-6 flex w-full items-center justify-center rounded-2xl border border-drift-border bg-drift-navy-deep px-6 py-4 text-base font-semibold text-drift-gold-mid transition-colors hover:border-drift-gold-to/40 hover:text-white"
+          >
+            Show membership pass for member rate
+          </Link>
+        )}
           </>
         )}
       </div>
