@@ -52,7 +52,7 @@ export function PerksExplorer({ perks }: PerksExplorerProps) {
         <p className="text-xs uppercase tracking-widest text-drift-gold-mid">Explore</p>
         <h1 className="mt-1 text-xl font-bold">Deals & experiences</h1>
         <p className="mt-1 text-sm text-drift-text-muted">
-          Member discounts across gyms, cafés, tours, and more.
+          Founding Airlie Beach partners — gyms, cafés, hire, food, and more.
         </p>
       </header>
 

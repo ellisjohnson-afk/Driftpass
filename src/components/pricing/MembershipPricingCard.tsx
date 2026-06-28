@@ -41,7 +41,7 @@ export function MembershipPricingCard({
       <div className="pr-20">
         <h2 className="text-xl font-bold leading-tight">Drift Pass Membership</h2>
         <p className="mt-1 text-sm text-drift-navy-deep/75">
-          One membership for the traveller lifestyle
+          Deals, Trip Help & your digital pass in one place
         </p>
       </div>
 

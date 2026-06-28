@@ -42,7 +42,7 @@ export default async function TripHelpPage() {
           <p className="text-xs uppercase tracking-widest text-drift-gold-mid">Trip Help</p>
           <h1 className="mt-1 text-2xl font-bold">Trip Help</h1>
           <p className="mt-1 text-sm text-drift-text-muted">
-            Traveller utilities and local essentials for Airlie Beach.
+            Book utilities, read local FAQ, and grab marketplace deals in Airlie Beach.
           </p>
         </div>
         <Link

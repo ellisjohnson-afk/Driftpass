@@ -8,12 +8,12 @@ import type { Plan, PlanSlug } from '@/types'
 // ============================================================
 
 export const MEMBERSHIP_INCLUSIONS = [
-  'Member-only discounts',
-  'Exclusive local deals',
-  'Access to the Drift Pass marketplace',
-  'Weekly traveller perks',
-  'Fitness, coffee and activity offers',
-  'Australia-wide partner network',
+  'Member discounts at founding partners',
+  'Trip Help — luggage, showers, WiFi & more',
+  'Airlie Beach welcome guide & local FAQ',
+  'Rotating pass PIN for partner check-in',
+  'Marketplace deals on gym, coffee & activities',
+  'Growing East Coast partner network',
   'Cancel anytime',
 ] as const
 

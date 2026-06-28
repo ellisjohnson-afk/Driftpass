@@ -62,13 +62,13 @@ export function TownWelcomeContent({ town }: TownWelcomeContentProps) {
             href="/trip-help"
             emoji="🧳"
             title="Trip Help"
-            subtitle="Luggage, showers, WiFi & more"
+            subtitle="Book luggage, showers, WiFi & laundry"
           />
           <QuickLink
             href="/perks"
             emoji="✨"
-            title="Explore perks"
-            subtitle="Member deals with local partners"
+            title="Member deals"
+            subtitle="Discounts at founding partners"
           />
           <QuickLink
             href="/trip-help?tab=essentials"

@@ -15,8 +15,8 @@ export function EssentialsFaq({ items, className }: EssentialsFaqProps) {
   return (
     <div className={cn('space-y-6', className)}>
       <p className="text-sm text-drift-text-muted">
-        Quick answers for water, WiFi, parking, showers, and van-life basics in Airlie Beach.
-        Where we have a Trip Help utility, you can buy and collect on the spot.
+        Straight answers for water, WiFi, parking, showers, and getting around Airlie Beach.
+        Where we sell a utility in Trip Help, you can buy online and collect with your PIN.
       </p>
 
       {categories.map((category) => {

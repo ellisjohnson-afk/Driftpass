@@ -2,17 +2,19 @@ const STEPS = [
   {
     number: 1,
     title: 'JOIN',
-    description: 'Become a Drift Pass member for $7.99 per week.',
+    description: 'Become a member for $7.99 per week — billed weekly, cancel anytime.',
   },
   {
     number: 2,
-    title: 'DISCOVER',
-    description: 'Browse local businesses, gyms, cafés, tours and experiences.',
+    title: 'EXPLORE',
+    description:
+      'Browse founding partner deals, book Trip Help utilities, and open your Airlie Beach welcome guide.',
   },
   {
     number: 3,
     title: 'SAVE',
-    description: 'Access member discounts and purchase exclusive marketplace offers.',
+    description:
+      'Show your rotating pass PIN at partners, or a collection receipt PIN for paid Trip Help add-ons.',
   },
 ] as const
 

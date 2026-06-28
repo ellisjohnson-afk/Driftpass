@@ -80,9 +80,9 @@ export default async function HomePage() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-drift-gold-mid">
           Airlie Beach
         </p>
-        <p className="mt-1 text-lg font-bold text-white">Welcome guide</p>
+        <p className="mt-1 text-lg font-bold text-white">Airlie Beach guide</p>
         <p className="mt-1 text-sm text-drift-text-muted">
-          Tour highlights, local FAQ, and quick links for your stay
+          Reef highlights, local FAQ, and quick links for your stay
         </p>
       </Link>
 
@@ -108,7 +108,7 @@ export default async function HomePage() {
         <div className="mb-3 flex items-end justify-between">
           <div>
             <h2 className="text-lg font-bold">Deals near you</h2>
-            <p className="text-sm text-drift-text-muted">Save money today</p>
+            <p className="text-sm text-drift-text-muted">Founding partner perks in Airlie Beach</p>
           </div>
           <Link href="/perks" className="text-xs font-semibold text-drift-gold-mid hover:text-white">
             See all

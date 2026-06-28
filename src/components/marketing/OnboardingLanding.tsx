@@ -48,7 +48,8 @@ export function OnboardingLanding() {
             Travel Better.
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-drift-text-muted">
-            One membership. Exclusive deals across Australia.
+            One membership for the Whitsundays and beyond — member deals, traveller essentials, and
+            local perks from $7.99/week.
           </p>
 
           <div className="mt-8 grid grid-cols-4 gap-3">
