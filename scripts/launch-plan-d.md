@@ -36,9 +36,9 @@ npm run test:e2e -- https://www.driftpass.com.au
 
 Manual partner flow:
 
-1. Member opens **My Pass** — note 6-digit PIN
+1. Member opens **My Pass** — note the 6-digit PIN (refreshes every 60s)
 2. Partner opens **https://www.driftpass.com.au/scan** (bookmark on tablet)
-3. Select business + service → enter PIN → **Approved**
+3. Enter PIN → **Active member** (no credits — apply perk/discount as agreed)
 
 ## 4. Database migrations (if not applied)
 

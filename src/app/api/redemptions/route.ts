@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { verifyPassToken, verifyPassPIN, InvalidTokenError, ExpiredTokenError } from '@/lib/qr/generator'
+import { verifyPassToken, InvalidTokenError, ExpiredTokenError } from '@/lib/qr/generator'
+import { lookupMemberByPin } from '@/lib/pass/lookup-member-by-pin'
 import { deductCredits, InsufficientCreditsError } from '@/lib/credits/engine'
 import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
 import { sendRedemptionConfirmationEmail } from '@/lib/email/resend'
@@ -43,17 +44,16 @@ export async function POST(req: NextRequest) {
       .eq('id', serviceId).eq('is_active', true).single()
     if (!service) return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 
-    // Find the subscriber whose PIN matches — shard pre-filters to ~1% of subscribers
-    const shard = pin.slice(0, 2)
-    const { data: subs } = await adminClient
-      .from('subscriptions')
-      .select('id, user_id')
-      .in('status', [...PASS_ACTIVE_STATUSES])
-      .eq('pin_shard', shard)
-    const matched = subs?.find((s) => verifyPassPIN(pin, s.user_id, s.id))
+    const matched = await lookupMemberByPin(pin)
     if (!matched) return NextResponse.json({ error: 'Invalid or expired PIN' }, { status: 401 })
 
-    return processRedemption({ userId: matched.user_id, subscriptionId: matched.id, serviceId, service: service as ServiceRow, adminClient })
+    return processRedemption({
+      userId: matched.userId,
+      subscriptionId: matched.subscriptionId,
+      serviceId,
+      service: service as ServiceRow,
+      adminClient,
+    })
   }
 
   // ── QR Token path (legacy) ────────────────────────────────────

@@ -34,7 +34,7 @@ export function MembershipCard({
   memberName,
   memberSince,
   isActive = true,
-  instruction = 'Show this code to partner businesses',
+  instruction = 'Show this code at partner businesses for member perks',
   children,
   className,
 }: MembershipCardProps) {
