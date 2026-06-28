@@ -40,6 +40,14 @@ Manual partner flow:
 2. Partner opens **https://www.driftpass.com.au/scan** (bookmark on tablet)
 3. Enter PIN → **Active member** (no credits — apply perk/discount as agreed)
 
+Partner collect E2E (paid Trip Help orders):
+
+```bash
+npm run test:collect-e2e
+```
+
+Manual: member buys add-on → **collection PIN** on receipt → partner **Collect order** on `/scan` → **Collected** screen → member sees **Done** in My purchases.
+
 ## 4. Database migrations (if not applied)
 
 | Migration | Command | What |

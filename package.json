@@ -21,6 +21,7 @@
     "email:verify": "node scripts/verify-resend.mjs",
     "test:pin": "node scripts/test-pin-windows.mjs",
     "test:e2e": "node scripts/e2e-checklist.mjs",
+    "test:collect-e2e": "node scripts/test-partner-collect-e2e.mjs https://www.driftpass.com.au",
     "vercel:env": "node scripts/sync-vercel-env.mjs",
     "vercel:env:dry": "node scripts/sync-vercel-env.mjs --dry-run"
   },

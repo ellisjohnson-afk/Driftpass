@@ -54,5 +54,8 @@ console.log('  1. Sign up at /signup → complete Stripe Checkout')
 console.log('  2. Open /pass — verify 6-digit PIN rotates every 60s')
 console.log('  3. Open /scan — enter member PIN from My Pass → Active member')
 console.log('  4. Check /account — membership and profile load')
+console.log('\nPartner collect (automated):')
+console.log('  npm run test:collect-e2e')
+console.log('Manual collect: buy Trip Help add-on → receipt PIN → /scan → Collect order')
 
 process.exit(passed === checks.length ? 0 : 1)
