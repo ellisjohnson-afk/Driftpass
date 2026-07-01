@@ -11,6 +11,8 @@ export interface OrderVoucher {
   product_slug: string
   product_name: string
   amount_aud_cents: number
+  partner_payout_cents: number
+  platform_fee_cents: number
   collection_pin: string
   status: OrderVoucherStatus
   stripe_checkout_session_id: string | null

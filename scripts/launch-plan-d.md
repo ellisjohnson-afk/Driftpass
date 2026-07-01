@@ -48,6 +48,12 @@ npm run test:collect-e2e
 
 Manual: member buys add-on → **collection PIN** on receipt → partner **Collect order** on `/scan` → **Collected** screen → member sees **Done** in My purchases.
 
+Partner tablet QA (automated + manual checklist):
+
+```bash
+npm run test:partner-qa
+```
+
 ## 4. Database migrations (if not applied)
 
 | Migration | Command | What |

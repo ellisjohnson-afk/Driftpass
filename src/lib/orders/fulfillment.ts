@@ -4,6 +4,7 @@ import { resolveUserIdFromStripe, ensureProfileExists } from '@/lib/stripe/activ
 import { stripe } from '@/lib/stripe/config'
 import { getPurchasableProduct, computeOrderExpiry } from '@/lib/orders/catalog'
 import { generateCollectionPin } from '@/lib/orders/collection-pin'
+import { resolvePartnerPayoutCents, resolveServiceTypeLookup } from '@/lib/orders/payout'
 import type { OrderVoucher, PurchasableProductType } from '@/lib/orders/types'
 
 async function resolvePartnerIds(
@@ -22,14 +23,20 @@ async function resolvePartnerIds(
 
   let partnerServiceId: string | null = null
   if (product.serviceType) {
-    const { data: service } = await admin
-      .from('partner_services')
-      .select('id')
-      .eq('partner_id', partner.id)
-      .eq('service_type', product.serviceType)
-      .eq('is_active', true)
-      .maybeSingle()
-    partnerServiceId = service?.id ?? null
+    for (const lookupType of resolveServiceTypeLookup(product.serviceType)) {
+      const { data: service } = await admin
+        .from('partner_services')
+        .select('id')
+        .eq('partner_id', partner.id)
+        .eq('service_type', lookupType)
+        .eq('is_active', true)
+        .maybeSingle()
+
+      if (service) {
+        partnerServiceId = service.id
+        break
+      }
+    }
   }
 
   return { partnerId: partner.id, partnerServiceId }
@@ -106,6 +113,13 @@ export async function fulfillOrderFromCheckoutSession(
       ? session.payment_intent
       : session.payment_intent?.id ?? null
 
+  const { partnerPayoutCents, platformFeeCents } = await resolvePartnerPayoutCents(admin, {
+    partnerId,
+    partnerServiceId,
+    amountAudCents: product.priceAudCents,
+    serviceType: product.serviceType,
+  })
+
   const { data: voucher, error } = await admin
     .from('order_vouchers')
     .insert({
@@ -116,6 +130,8 @@ export async function fulfillOrderFromCheckoutSession(
       product_slug: product.slug,
       product_name: product.name,
       amount_aud_cents: product.priceAudCents,
+      partner_payout_cents: partnerPayoutCents,
+      platform_fee_cents: platformFeeCents,
       collection_pin: collectionPin,
       status: 'paid',
       stripe_checkout_session_id: sessionId,
