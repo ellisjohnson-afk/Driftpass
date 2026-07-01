@@ -16,7 +16,7 @@ import { buildLoginReturnUrl, resolveAuthNext, readAuthPostLoginCookie } from '@
 // 2. Guards protected routes (dashboard, partner portal)
 // ============================================================
 
-const PROTECTED_ROUTES = ['/dashboard', '/home', '/account', '/pass', '/perks', '/trip-help', '/town', '/design-preview']
+const PROTECTED_ROUTES = ['/dashboard', '/home', '/account', '/pass', '/perks', '/trip-help', '/town', '/design-preview', '/admin']
 const PARTNER_ROUTES: string[] = []  // /portal not yet built; /scan is public (PIN-based, no login needed)
 const AUTH_ROUTES = ['/login', '/signup']
 

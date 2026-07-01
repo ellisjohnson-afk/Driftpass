@@ -62,7 +62,7 @@ export default async function AccountPage({
 
   const { data: profile } = await admin
     .from('profiles')
-    .select('full_name, email, avatar_url, traveller_type, created_at')
+    .select('full_name, email, avatar_url, traveller_type, created_at, is_admin')
     .eq('id', user.id)
     .single()
 
@@ -178,6 +178,16 @@ export default async function AccountPage({
       ) : (
         <NoPassEmptyState />
       )}
+
+      {profile?.is_admin ? (
+        <Link
+          href="/admin"
+          className="flex w-full items-center justify-between rounded-2xl border border-[#00FF7F]/30 bg-[#00FF7F]/10 px-4 py-4 text-sm font-semibold text-[#00FF7F] transition-colors hover:border-[#00FF7F]/50 hover:bg-[#00FF7F]/15"
+        >
+          <span>Admin dashboard</span>
+          <span aria-hidden>→</span>
+        </Link>
+      ) : null}
 
       <details className="rounded-2xl border border-drift-border/60 bg-drift-navy-light px-4 py-3">
         <summary className="cursor-pointer text-sm font-medium text-drift-text-muted">

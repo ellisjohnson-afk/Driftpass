@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import Link from 'next/link'
 import { SHOUTOUT_PLACEMENTS } from '@/lib/shoutouts/constants'
 import type { FeaturedShoutoutWithPartner, ShoutoutPlacement } from '@/lib/shoutouts/types'
 
@@ -141,17 +140,12 @@ export function AdminShoutoutsManager({ partners }: { partners: PartnerOption[] 
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <Link href="/admin" className="text-sm text-[#9CA3AF] hover:text-white">
-            ← Admin
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold">Featured shoutouts</h1>
+      <div>
+          <h1 className="text-2xl font-bold">Featured shoutouts</h1>
           <p className="mt-1 text-sm text-[#6B7280]">
             Sell placement slots to local businesses — home, Trip Help, Explore, town guide.
           </p>
         </div>
-      </div>
 
       {error ? (
         <div className="rounded-xl border border-red-800/50 bg-red-900/20 px-4 py-3 text-sm text-red-400">
