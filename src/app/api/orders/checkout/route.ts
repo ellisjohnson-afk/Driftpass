@@ -104,7 +104,6 @@ export async function POST(req: NextRequest) {
     customer: customerId,
     client_reference_id: user.id,
     mode: 'payment',
-    payment_method_types: ['card'],
     line_items: [
       {
         quantity: 1,

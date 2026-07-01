@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import { assertStripeKeysAligned } from '@/lib/stripe/mode'
 
 // Stripe singleton — reused across module lifetime (important for Vercel cold starts)
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -11,11 +12,9 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   },
 })
 
-// All DriftPass plans are billed bi-weekly (every 2 weeks).
-// When creating prices in Stripe dashboard: Billing period → Every 2 weeks
-// Or via API: { recurring: { interval: 'week', interval_count: 2 } }
+assertStripeKeysAligned()
 
-// Map plan slugs to Stripe price IDs
+// Map plan slugs to Stripe price IDs (legacy paid tiers only — membership is free)
 export const STRIPE_PRICE_IDS = {
   membership: process.env.STRIPE_MEMBERSHIP_PRICE_ID!,
   wanderer: process.env.STRIPE_WANDERER_PRICE_ID!,

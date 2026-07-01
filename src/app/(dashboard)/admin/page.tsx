@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { formatAUD, formatDate } from '@/lib/utils/format'
 import { fetchPartnerOrderRows, summarizePartnerSales } from '@/lib/orders/partner-sales-report'
 import { createClient } from '@/lib/supabase/server'
+import { getStripeKeyMode } from '@/lib/stripe/mode'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +18,7 @@ export default async function AdminPage() {
   }
 
   const totalTripHelpPayable = tripHelpSummaries.reduce((sum, s) => sum + s.payableAudCents, 0)
+  const stripeMode = getStripeKeyMode()
 
   const [
     { count: totalSubscribers },
@@ -35,6 +37,20 @@ export default async function AdminPage() {
       <div>
         <h1 className="mb-1 text-2xl font-bold">Overview</h1>
         <p className="text-sm text-[#6B7280]">Members, partners, Trip Help sales, and redemptions</p>
+        <p className="mt-2 text-xs">
+          Stripe:{' '}
+          <span
+            className={
+              stripeMode === 'live'
+                ? 'font-semibold text-[#00FF7F]'
+                : stripeMode === 'test'
+                  ? 'font-semibold text-yellow-400'
+                  : 'text-[#6B7280]'
+            }
+          >
+            {stripeMode === 'live' ? 'Live mode' : stripeMode === 'test' ? 'Test mode' : 'Not configured'}
+          </span>
+        </p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

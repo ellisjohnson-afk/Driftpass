@@ -1,61 +1,53 @@
-# Stripe webhook checklist (production)
+# Stripe webhook checklist (production / live mode)
 
-Endpoint (live mode):
+Endpoint:
 
 ```
 https://www.driftpass.com.au/api/stripe/webhook
 ```
 
-Events to enable:
+**Important:** Live webhooks need a **live** signing secret (`whsec_...` from the live endpoint). Test and live secrets are different.
 
-- `checkout.session.completed` — creates subscription row + initial credits
-- `invoice.paid` — renewals only (`subscription_cycle`)
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
+## Events to enable
 
-## Vercel Production env
+| Event | Purpose |
+|-------|---------|
+| `checkout.session.completed` | Trip Help / tour purchases (`orderType=voucher`) + legacy subscriptions |
+| `invoice.paid` | Legacy subscription renewals (`subscription_cycle`) |
+| `customer.subscription.updated` | Plan status changes |
+| `customer.subscription.deleted` | Cancellations |
 
-Must match **live** Stripe webhook signing secret:
+Membership signups are **free** (no Stripe) — `checkout.session.completed` for subscriptions is only for legacy paid tiers.
+
+## Vercel production env
 
 ```
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_SECRET_KEY=sk_live_...   (or sk_test_... in test mode — webhook secret must match same mode)
+STRIPE_SECRET_KEY=sk_live_...
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...    # from LIVE webhook endpoint
 ```
 
-If payment succeeds but account shows "No active pass yet", check Stripe → Webhooks → event delivery:
+Legacy tier price IDs are optional (`STRIPE_WANDERER_PRICE_ID`, etc.). Trip Help uses dynamic Checkout prices — no product price env vars needed.
+
+Run before deploy:
+
+```bash
+npm run stripe:go-live -- --expect-live
+npm run vercel:env
+npx vercel --prod
+```
+
+## Troubleshooting
 
 | Symptom | Likely cause |
 |---------|----------------|
-| No events | Webhook endpoint not configured or wrong mode (test vs live) |
-| HTTP 400 | `STRIPE_WEBHOOK_SECRET` mismatch |
-| HTTP 500 | Handler error — see Vercel function logs `[Webhook]` |
-| HTTP 200 but no row | Previously swallowed errors; redeploy fixes logging + 500 retry |
+| Payment succeeds, no Trip Help order | Live webhook missing or wrong `STRIPE_WEBHOOK_SECRET` |
+| HTTP 400 on webhook | Signing secret mismatch (test secret on live endpoint) |
+| HTTP 500 | Handler error — check Vercel logs `[Webhook]` |
+| Charges in test mode on production | `sk_test_` still set on Vercel — run `stripe:go-live` |
 
-## After successful `checkout.session.completed`
+## Manual recovery
 
-Supabase should have:
+Admin → Trip Help orders → **Recover paid checkout** (paste `cs_live_...`).
 
-1. `subscriptions` row — `status` = `active` or `trialing`, `stripe_subscription_id` set
-2. `credit_transactions` row — type `credit`, amount = plan `credits_per_month`
-
-Metadata on Checkout session (all plans):
-
-```json
-{
-  "userId": "<supabase auth uuid>",
-  "planSlug": "membership|wanderer|explorer|nomad|van_lifer",
-  "planId": "<plans.id uuid>"
-}
-```
-
-Plan resolution is dynamic — slug from metadata, subscription metadata, Stripe price ID env mapping, or `planId` fallback.
-
-## Manual replay (failed user)
-
-In Stripe Dashboard → Payments → find Checkout session → **Resend** `checkout.session.completed` after deploy.
-
-Or Stripe CLI:
-
-```bash
-stripe events resend evt_...
-```
+Or Stripe Dashboard → resend `checkout.session.completed` for the session.

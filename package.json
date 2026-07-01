@@ -17,6 +17,7 @@
     "db:apply-008": "node scripts/apply-migration-008.mjs",
     "launch:check": "node scripts/e2e-checklist.mjs https://www.driftpass.com.au",
     "stripe:verify": "node scripts/verify-stripe-prices.mjs",
+    "stripe:go-live": "node scripts/stripe-go-live.mjs",
     "auth:link": "node scripts/generate-auth-link.mjs",
     "email:verify": "node scripts/verify-resend.mjs",
     "test:pin": "node scripts/test-pin-windows.mjs",
