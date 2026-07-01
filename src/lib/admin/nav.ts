@@ -25,8 +25,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Trip Help orders',
     description: 'Upsells, tours, and partner payouts',
   },
+  {
+    href: '/admin/members',
+    label: 'Members',
+    description: 'Accounts, passes, and admin access',
+  },
 ]
 
-export const ADMIN_NAV_COMING_SOON = [
-  'Members',
-] as const
+export const ADMIN_NAV_COMING_SOON: readonly string[] = []
