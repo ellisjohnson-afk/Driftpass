@@ -10,6 +10,7 @@ import {
   syncStripeSubscriptionForUser,
 } from '@/lib/stripe/activation'
 import { isFreeMembershipSubscription } from '@/lib/subscriptions/free-membership'
+import { checkUserIsAdmin } from '@/lib/admin/check-is-admin'
 import { computeProfileStats, formatMemberSince } from '@/lib/profile/stats'
 import {
   LifetimeSavingsCard,
@@ -94,14 +95,15 @@ export default async function AccountPage({
     : { data: [] }
 
   const stats = computeProfileStats(memberSince, redemptions ?? [])
+  const showAdminLink = await checkUserIsAdmin(user.id, user.email ?? profile?.email)
 
   return (
     <div className="space-y-6 animate-fade-in pb-4">
       {searchParams.admin === 'denied' ? (
         <div className="rounded-2xl border border-amber-800/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
-          Admin access could not be verified. Confirm your account has{' '}
-          <code className="text-amber-200">is_admin = true</code> in Supabase, then sign out and
-          back in.
+          Admin access could not be verified. Open <strong>/admin</strong> for setup steps, or
+          confirm <code className="text-amber-200">is_admin = true</code> on your profile in
+          Supabase.
         </div>
       ) : null}
 
@@ -187,7 +189,7 @@ export default async function AccountPage({
         <NoPassEmptyState />
       )}
 
-      {profile?.is_admin ? (
+      {showAdminLink ? (
         <Link
           href="/admin"
           className="flex w-full items-center justify-between rounded-2xl border border-[#00FF7F]/30 bg-[#00FF7F]/10 px-4 py-4 text-sm font-semibold text-[#00FF7F] transition-colors hover:border-[#00FF7F]/50 hover:bg-[#00FF7F]/15"

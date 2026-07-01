@@ -1,21 +1,24 @@
-import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { checkUserIsAdmin } from '@/lib/admin/check-is-admin'
 
-export async function requireAdminPage() {
+export async function resolveAdminAccess() {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect('/login?next=/admin')
+    return { kind: 'login' as const }
   }
 
-  const isAdmin = await checkUserIsAdmin(user.id)
+  const isAdmin = await checkUserIsAdmin(user.id, user.email)
   if (!isAdmin) {
-    redirect('/account?admin=denied')
+    return {
+      kind: 'denied' as const,
+      userId: user.id,
+      email: user.email ?? 'unknown',
+    }
   }
 
   const admin = createAdminClient()
@@ -25,5 +28,10 @@ export async function requireAdminPage() {
     .eq('id', user.id)
     .maybeSingle()
 
-  return { user, profile }
+  return {
+    kind: 'ok' as const,
+    user,
+    profile,
+    userLabel: profile?.full_name ?? profile?.email ?? user.email ?? undefined,
+  }
 }

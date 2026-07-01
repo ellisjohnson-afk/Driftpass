@@ -20,6 +20,7 @@ export default async function DashboardLayout({
   const pathname = (await headers()).get('x-pathname') ?? '/account'
   const isPublicPricing = pathname === '/pricing'
   const isPricingPage = pathname === '/pricing'
+  const isAdminPage = pathname === '/admin' || pathname.startsWith('/admin/')
   const isPassPage = pathname === '/pass'
   const isPerksPage = pathname === '/perks' || pathname.startsWith('/perks/')
   const isTripHelpPage = pathname === '/trip-help' || pathname.startsWith('/trip-help/')
@@ -28,6 +29,10 @@ export default async function DashboardLayout({
 
   if (!user && !isPublicPricing) {
     redirect(appUrlAt(appOrigin, '/login', { next: pathname }))
+  }
+
+  if (isAdminPage) {
+    return children
   }
 
   if (!user) {

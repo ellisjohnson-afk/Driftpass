@@ -13,7 +13,7 @@ export async function requireAdminApi() {
     return { error: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) }
   }
 
-  const isAdmin = await checkUserIsAdmin(user.id)
+  const isAdmin = await checkUserIsAdmin(user.id, user.email)
   if (!isAdmin) {
     return { error: NextResponse.json({ error: 'Forbidden' }, { status: 403 }) }
   }
