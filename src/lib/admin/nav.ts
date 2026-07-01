@@ -20,9 +20,13 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     label: 'Featured shoutouts',
     description: 'Paid placement slots',
   },
+  {
+    href: '/admin/orders',
+    label: 'Trip Help orders',
+    description: 'Upsells, tours, and partner payouts',
+  },
 ]
 
 export const ADMIN_NAV_COMING_SOON = [
   'Members',
-  'Trip Help orders',
 ] as const

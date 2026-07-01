@@ -148,6 +148,46 @@ export async function fulfillOrderFromCheckoutSession(
   return voucher as OrderVoucher
 }
 
+export async function markOrderCollectedById(orderId: string) {
+  const admin = createAdminClient()
+  const now = new Date().toISOString()
+
+  const { data: order } = await admin
+    .from('order_vouchers')
+    .select('*')
+    .eq('id', orderId)
+    .maybeSingle()
+
+  if (!order) {
+    return { error: 'Order not found', status: 404 as const }
+  }
+
+  if (order.status === 'collected') {
+    return { error: 'This order was already collected', status: 409 as const }
+  }
+
+  if (order.status !== 'paid') {
+    return { error: 'Only paid orders can be marked collected', status: 400 as const }
+  }
+
+  if (order.expires_at < now) {
+    await admin.from('order_vouchers').update({ status: 'expired' }).eq('id', order.id)
+    return { error: 'This order has expired', status: 410 as const }
+  }
+
+  const { error: updateError } = await admin
+    .from('order_vouchers')
+    .update({ status: 'collected', collected_at: now })
+    .eq('id', order.id)
+    .eq('status', 'paid')
+
+  if (updateError) {
+    return { error: 'Could not mark order as collected', status: 500 as const }
+  }
+
+  return { status: 200 as const, data: { id: order.id, status: 'collected' as const } }
+}
+
 export async function collectOrderByPin(pin: string) {
   const cleanPin = pin.replace(/\D/g, '')
   if (cleanPin.length !== 6) return { error: 'Enter a 6-digit collection PIN', status: 400 as const }
