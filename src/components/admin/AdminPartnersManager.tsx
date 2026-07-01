@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { PartnerCategory } from '@/types'
 import type { AdminPartnerRow } from '@/lib/partners/admin-fetch'
 import { formatPartnerCategory, PARTNER_CATEGORIES } from '@/lib/partners/categories'
+import { AdminPartnerOnboardingPanel } from '@/components/admin/AdminPartnerOnboardingPanel'
 
 function slugifyName(name: string): string {
   return name
@@ -39,6 +40,7 @@ export function AdminPartnersManager() {
   const [rows, setRows] = useState<AdminPartnerRow[]>([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [onboardingId, setOnboardingId] = useState<string | null>(null)
   const [slugTouched, setSlugTouched] = useState(false)
   const [query, setQuery] = useState('')
   const [showInactive, setShowInactive] = useState(true)
@@ -80,6 +82,7 @@ export function AdminPartnersManager() {
   }, [query, rows, showInactive])
 
   function startEdit(row: AdminPartnerRow) {
+    setOnboardingId(null)
     setEditingId(row.id)
     setSlugTouched(true)
     setForm({
@@ -101,8 +104,16 @@ export function AdminPartnersManager() {
     })
   }
 
+  function startOnboarding(row: AdminPartnerRow) {
+    setEditingId(null)
+    setOnboardingId(row.id)
+    setSlugTouched(false)
+    setForm(EMPTY_FORM)
+  }
+
   function resetForm() {
     setEditingId(null)
+    setOnboardingId(null)
     setSlugTouched(false)
     setForm(EMPTY_FORM)
   }
@@ -169,7 +180,7 @@ export function AdminPartnersManager() {
       <div>
         <h1 className="text-2xl font-bold">Partners</h1>
         <p className="mt-1 text-sm text-[#6B7280]">
-          Add and manage businesses on Explore, Trip Help, and partner scan.
+          Add businesses, configure services & payouts, and launch them on Trip Help.
         </p>
       </div>
 
@@ -353,6 +364,14 @@ export function AdminPartnersManager() {
         </div>
       </form>
 
+      {onboardingId ? (
+        <AdminPartnerOnboardingPanel
+          partnerId={onboardingId}
+          partnerName={rows.find((row) => row.id === onboardingId)?.name ?? 'Partner'}
+          partnerSlug={rows.find((row) => row.id === onboardingId)?.slug ?? ''}
+        />
+      ) : null}
+
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-semibold">All partners ({filteredRows.length})</h2>
@@ -419,6 +438,13 @@ export function AdminPartnersManager() {
                       }`}
                     >
                       {row.is_active ? 'Active' : 'Inactive'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startOnboarding(row)}
+                      className="rounded-lg border border-[#FF6B35]/40 px-2 py-1 text-xs font-semibold text-[#FF6B35] hover:bg-[#FF6B35]/10"
+                    >
+                      Onboard
                     </button>
                     <Link
                       href={`/perks/${row.slug}`}
