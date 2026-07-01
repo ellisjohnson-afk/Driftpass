@@ -48,6 +48,12 @@ export default async function AdminPage() {
         <div>
           <h1 className="text-2xl font-bold mb-1">Admin Dashboard</h1>
           <p className="text-sm text-[#6B7280]">DriftPass internal</p>
+          <a
+            href="/admin/shoutouts"
+            className="mt-3 inline-block text-sm font-medium text-[#00FF7F] hover:underline"
+          >
+            Manage featured shoutouts →
+          </a>
         </div>
 
         {/* Stats */}

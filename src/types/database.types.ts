@@ -363,6 +363,71 @@ export interface Database {
           }
         ]
       }
+      featured_shoutouts: {
+        Row: {
+          id: string
+          partner_id: string | null
+          business_name: string
+          headline: string
+          body: string | null
+          cta_label: string
+          cta_href: string
+          image_url: string | null
+          placement: string
+          town_slug: string
+          sort_order: number
+          starts_at: string | null
+          ends_at: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          partner_id?: string | null
+          business_name: string
+          headline: string
+          body?: string | null
+          cta_label?: string
+          cta_href: string
+          image_url?: string | null
+          placement: string
+          town_slug?: string
+          sort_order?: number
+          starts_at?: string | null
+          ends_at?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          partner_id?: string | null
+          business_name?: string
+          headline?: string
+          body?: string | null
+          cta_label?: string
+          cta_href?: string
+          image_url?: string | null
+          placement?: string
+          town_slug?: string
+          sort_order?: number
+          starts_at?: string | null
+          ends_at?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "featured_shoutouts_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       order_vouchers: {
         Row: {
           id: string

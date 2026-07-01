@@ -6,6 +6,8 @@ import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getPerkDiscountLabel, getPerkImageUrl, EXPLORE_EXCLUDED_PARTNER_SLUGS } from '@/lib/perks/constants'
 import { PerksExplorer, type PerkListItem } from '@/components/perks'
+import { FeaturedShoutoutsStrip } from '@/components/shoutouts'
+import { fetchActiveShoutouts } from '@/lib/shoutouts/fetch'
 import type { PartnerCategory } from '@/types'
 
 export const dynamic = 'force-dynamic'
@@ -61,5 +63,21 @@ export default async function PerksPage() {
     }
   })
 
-  return <PerksExplorer perks={perks} />
+  let exploreShoutouts: Awaited<ReturnType<typeof fetchActiveShoutouts>> = []
+  try {
+    exploreShoutouts = await fetchActiveShoutouts(admin, {
+      placement: 'explore',
+      townSlug: 'airlie-beach',
+      limit: 1,
+    })
+  } catch {
+    // Migration 017 may not be applied yet
+  }
+
+  return (
+    <div className="space-y-6 animate-fade-in pb-2">
+      <FeaturedShoutoutsStrip shoutouts={exploreShoutouts} title="Featured partner" compact />
+      <PerksExplorer perks={perks} />
+    </div>
+  )
 }

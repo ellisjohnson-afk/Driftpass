@@ -7,6 +7,8 @@ import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getTown } from '@/lib/towns'
 import { TripHelpMarketplace, TripHelpUtilityGrid, TripHelpTabs, EssentialsFaq } from '@/components/trip-help'
+import { FeaturedShoutoutsStrip } from '@/components/shoutouts'
+import { fetchActiveShoutouts } from '@/lib/shoutouts/fetch'
 import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
@@ -35,6 +37,17 @@ export default async function TripHelpPage() {
   const town = getTown('airlie-beach')
   const essentials = town?.essentials ?? []
 
+  let tripHelpShoutouts: Awaited<ReturnType<typeof fetchActiveShoutouts>> = []
+  try {
+    tripHelpShoutouts = await fetchActiveShoutouts(admin, {
+      placement: 'trip_help',
+      townSlug: 'airlie-beach',
+      limit: 1,
+    })
+  } catch {
+    // Migration 017 may not be applied yet
+  }
+
   return (
     <div className="space-y-8 animate-fade-in pb-2">
       <header className="flex items-start justify-between gap-4">
@@ -52,6 +65,8 @@ export default async function TripHelpPage() {
           My purchases
         </Link>
       </header>
+
+      <FeaturedShoutoutsStrip shoutouts={tripHelpShoutouts} title="Featured in Trip Help" compact />
 
       <Suspense fallback={<div className="h-40 animate-pulse rounded-2xl bg-drift-navy-light" />}>
         <TripHelpTabs

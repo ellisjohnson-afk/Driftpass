@@ -3,6 +3,8 @@ import { cn } from '@/lib/utils/cn'
 import { DirectionsButton } from '@/components/partner/DirectionsButton'
 import { getPartnerDirectionsUrl } from '@/lib/partners/detail'
 import { TourHighlightsSection } from './TourHighlightsSection'
+import { FeaturedShoutoutsStrip } from '@/components/shoutouts'
+import type { FeaturedShoutoutDisplay } from '@/lib/shoutouts/types'
 import type { Town } from '@/lib/towns/constants'
 
 function QuickLink({
@@ -34,9 +36,10 @@ function QuickLink({
 
 export interface TownWelcomeContentProps {
   town: Town
+  shoutouts?: FeaturedShoutoutDisplay[]
 }
 
-export function TownWelcomeContent({ town }: TownWelcomeContentProps) {
+export function TownWelcomeContent({ town, shoutouts = [] }: TownWelcomeContentProps) {
   const directionsUrl = getPartnerDirectionsUrl(
     town.mapCenter.lat,
     town.mapCenter.lng,
@@ -56,6 +59,12 @@ export function TownWelcomeContent({ town }: TownWelcomeContentProps) {
 
       <div className="relative -mt-6 space-y-6 rounded-t-4xl border border-drift-border/60 bg-drift-navy-light px-5 pb-8 pt-6">
         <DirectionsButton directionsUrl={directionsUrl} label="Get directions to town" />
+
+        <FeaturedShoutoutsStrip
+          shoutouts={shoutouts}
+          title={`Featured in ${town.name}`}
+          compact
+        />
 
         <div className="grid grid-cols-1 gap-2">
           <QuickLink

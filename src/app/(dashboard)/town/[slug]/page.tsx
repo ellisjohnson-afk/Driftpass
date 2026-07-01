@@ -7,6 +7,7 @@ import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getTown } from '@/lib/towns'
 import { TownWelcomeContent } from '@/components/town'
+import { fetchActiveShoutouts } from '@/lib/shoutouts/fetch'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,5 +39,16 @@ export default async function TownWelcomePage({
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  return <TownWelcomeContent town={town} />
+  let townShoutouts: Awaited<ReturnType<typeof fetchActiveShoutouts>> = []
+  try {
+    townShoutouts = await fetchActiveShoutouts(admin, {
+      placement: 'town',
+      townSlug: params.slug,
+      limit: 1,
+    })
+  } catch {
+    // Migration 017 may not be applied yet
+  }
+
+  return <TownWelcomeContent town={town} shoutouts={townShoutouts} />
 }

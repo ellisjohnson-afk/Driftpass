@@ -10,6 +10,8 @@ import { formatDate } from '@/lib/utils/format'
 import { getPerkDiscountLabel, getPerkImageUrl, EXPLORE_EXCLUDED_PARTNER_SLUGS } from '@/lib/perks/constants'
 import { MembershipCard } from '@/components/pass/MembershipCard'
 import { HomeDealCard } from '@/components/home/HomeDealCard'
+import { fetchActiveShoutouts } from '@/lib/shoutouts/fetch'
+import { FeaturedShoutoutsStrip } from '@/components/shoutouts'
 import { NoDealsNearbyEmptyState } from '@/components/ui'
 import type { PartnerCategory } from '@/types'
 
@@ -67,6 +69,17 @@ export default async function HomePage() {
     }
   })
 
+  let homeShoutouts: Awaited<ReturnType<typeof fetchActiveShoutouts>> = []
+  try {
+    homeShoutouts = await fetchActiveShoutouts(admin, {
+      placement: 'home',
+      townSlug: 'airlie-beach',
+      limit: 2,
+    })
+  } catch {
+    // Migration 017 may not be applied yet
+  }
+
   return (
     <div className="space-y-6 animate-fade-in pb-2">
       <header className="text-center">
@@ -105,6 +118,8 @@ export default async function HomePage() {
           </Link>
         </div>
       ) : null}
+
+      <FeaturedShoutoutsStrip shoutouts={homeShoutouts} />
 
       <section>
         <div className="mb-3 flex items-end justify-between">
