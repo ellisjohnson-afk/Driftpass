@@ -30,7 +30,7 @@ function isCheckoutSessionId(value: string | undefined): boolean {
 export default async function AccountPage({
   searchParams,
 }: {
-  searchParams: { subscribed?: string; session_id?: string }
+  searchParams: { subscribed?: string; session_id?: string; admin?: string }
 }) {
   const supabase = await createClient()
   const {
@@ -97,6 +97,14 @@ export default async function AccountPage({
 
   return (
     <div className="space-y-6 animate-fade-in pb-4">
+      {searchParams.admin === 'denied' ? (
+        <div className="rounded-2xl border border-amber-800/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
+          Admin access could not be verified. Confirm your account has{' '}
+          <code className="text-amber-200">is_admin = true</code> in Supabase, then sign out and
+          back in.
+        </div>
+      ) : null}
+
       {justSubscribed && hasActivePass && (
         <div className="rounded-2xl border border-drift-gold-to/30 bg-drift-gold-gradient/15 px-4 py-3 text-sm text-drift-gold-mid">
           Membership active — open My Pass to get your PIN.

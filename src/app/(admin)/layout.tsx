@@ -7,7 +7,7 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   const { profile } = await requireAdminPage()
-  const userLabel = profile.full_name ?? profile.email ?? undefined
+  const userLabel = profile?.full_name ?? profile?.email ?? undefined
 
   return <AdminShell userLabel={userLabel}>{children}</AdminShell>
 }
