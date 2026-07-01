@@ -35,20 +35,22 @@ export function MembershipPricingCard({
       )}
     >
       <div className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-drift-navy-deep/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-drift-gold-mid">
-        <span aria-hidden>★</span> Popular
+        <span aria-hidden>★</span> Free
       </div>
 
       <div className="pr-20">
         <h2 className="text-xl font-bold leading-tight">Drift Pass Membership</h2>
         <p className="mt-1 text-sm text-drift-navy-deep/75">
-          Deals, Trip Help & your digital pass in one place
+          Your free pass for deals, Trip Help & local discovery
         </p>
       </div>
 
-      <div className="mt-6 flex items-end gap-1">
-        <span className="text-5xl font-bold leading-none">$7.99</span>
-        <span className="mb-1 text-lg font-medium text-drift-navy-deep/70">/week</span>
+      <div className="mt-6 flex items-end gap-2">
+        <span className="text-5xl font-bold leading-none">Free</span>
       </div>
+      <p className="mt-2 text-sm text-drift-navy-deep/70">
+        Pay only for Trip Help add-ons, tours & experiences you choose
+      </p>
 
       <div className="mt-6">
         <p className="text-xs font-semibold uppercase tracking-[0.15em] text-drift-navy-deep/60">
@@ -70,10 +72,10 @@ export function MembershipPricingCard({
         disabled={loading}
         className="mt-8 w-full rounded-2xl bg-drift-gold-dark py-4 text-base font-bold text-drift-navy-deep shadow-md transition-all hover:brightness-110 disabled:opacity-60"
       >
-        {loading ? 'Starting checkout…' : 'Start Membership'}
+        {loading ? 'Getting your pass…' : 'Get My Free Pass'}
       </button>
       <p className="mt-3 text-center text-xs text-drift-navy-deep/60">
-        Billed weekly · Cancel anytime
+        No card required · Instant access
       </p>
     </div>
   )

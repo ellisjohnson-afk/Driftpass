@@ -9,6 +9,7 @@ import {
   activateCheckoutSession,
   syncStripeSubscriptionForUser,
 } from '@/lib/stripe/activation'
+import { isFreeMembershipSubscription } from '@/lib/subscriptions/free-membership'
 import { computeProfileStats, formatMemberSince } from '@/lib/profile/stats'
 import {
   LifetimeSavingsCard,
@@ -67,13 +68,14 @@ export default async function AccountPage({
 
   const { data: sub } = await admin
     .from('subscriptions')
-    .select('status, cancel_at_period_end, current_period_end, created_at, plans(name)')
+    .select('status, cancel_at_period_end, current_period_end, created_at, stripe_subscription_id, plans(name)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle()
 
   const hasActivePass = isPassActive(sub?.status)
+  const isFreeMember = isFreeMembershipSubscription(sub)
 
   if (justSubscribed && hasActivePass) {
     redirect('/pass')
@@ -144,14 +146,14 @@ export default async function AccountPage({
 
           {stats.dealsClaimed === 0 ? <NoHistoryEmptyState /> : null}
 
-          {sub?.cancel_at_period_end && sub.current_period_end ? (
+          {sub?.cancel_at_period_end && sub.current_period_end && !isFreeMember ? (
             <div className="rounded-2xl border border-yellow-800/60 bg-yellow-900/20 px-4 py-3 text-sm text-yellow-300">
               Your membership ends on {formatDate(sub.current_period_end)}. Manage billing below
               to keep your pass active.
             </div>
           ) : null}
 
-          <ProfileMenu showBilling />
+          <ProfileMenu showBilling={!isFreeMember} />
 
           <Link
             href="/pass"
@@ -164,8 +166,7 @@ export default async function AccountPage({
         <div className="rounded-3xl border border-amber-800/50 bg-amber-900/20 px-6 py-8 text-center">
           <h2 className="font-bold text-amber-200">Finishing activation…</h2>
           <p className="mt-2 text-sm text-amber-300/90">
-            Payment received — we are syncing your pass now. Refresh in a few seconds or open My
-            Pass.
+            We are syncing your pass now. Refresh in a few seconds or open My Pass.
           </p>
           <Link
             href="/pass"
@@ -193,12 +194,18 @@ export default async function AccountPage({
               {profile?.traveller_type?.replace('_', ' ') ?? '—'}
             </dd>
           </div>
-          {hasActivePass && sub ? (
+          {hasActivePass && sub && !isFreeMember ? (
             <div className="flex justify-between gap-4">
               <dt className="text-drift-text-muted">Next billing</dt>
               <dd className="text-right text-white">
                 {sub.current_period_end ? formatDate(sub.current_period_end) : '—'}
               </dd>
+            </div>
+          ) : null}
+          {hasActivePass && isFreeMember ? (
+            <div className="flex justify-between gap-4">
+              <dt className="text-drift-text-muted">Membership</dt>
+              <dd className="text-right text-white">Free</dd>
             </div>
           ) : null}
         </dl>

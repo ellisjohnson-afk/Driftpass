@@ -67,7 +67,7 @@ export const TOWNS: Record<TownSlug, Town> = {
           'Seventy kilometres of powder-white silica sand — consistently ranked among the world\'s best beaches.',
         emoji: '🏖️',
         imageUrl: WHITSUNDAY_IMAGES.beach,
-        href: '/perks',
+        href: '/trip-help/marketplace/reef-snorkel-day',
       },
       {
         slug: 'hill-inlet',
@@ -76,25 +76,25 @@ export const TOWNS: Record<TownSlug, Town> = {
           'The classic Whitsunday swirl — best from a day sail or scenic flight over the islands.',
         emoji: '🌊',
         imageUrl: WHITSUNDAY_IMAGES.inlet,
-        href: '/perks',
+        href: '/trip-help/marketplace/island-day-sail',
       },
       {
         slug: 'reef-day',
         title: 'Reef snorkel & dive days',
         description:
-          'Full-day trips from the marina to the Outer Reef. Book with local operators — member perks on Explore.',
+          'Full-day trips from the marina to the Outer Reef. Book with Whitsunday Reef Adventures in Trip Help.',
         emoji: '🐠',
         imageUrl: WHITSUNDAY_IMAGES.reef,
-        href: '/perks',
+        href: '/trip-help/marketplace/reef-snorkel-day',
       },
       {
         slug: 'sunset-cruise',
         title: 'Sunset sails',
         description:
-          'Golden-hour cruises through the islands. Perfect after a day on the water or before a night out in town.',
+          'Golden-hour cruises through the islands with Coral Sea Sailing — book in Trip Help.',
         emoji: '⛵',
         imageUrl: WHITSUNDAY_IMAGES.sail,
-        href: '/flash',
+        href: '/trip-help/marketplace/sunset-sail',
       },
     ],
     essentials: [
@@ -111,16 +111,16 @@ export const TOWNS: Record<TownSlug, Town> = {
         category: 'Digital nomad',
         question: 'Best spot to work with WiFi?',
         answer:
-          'Frequent-Seas is the local favourite: fast WiFi, power at every seat, and great coffee. Grab a half-day coworking pass through Trip Help.',
+          'Frequent-Seas is the local favourite: fast WiFi, power at every seat. Grab a half-day coworking pass through Trip Help.',
         utilityHref: '/trip-help/coworking',
       },
       {
-        id: 'coffee',
-        category: 'Food & drink',
-        question: 'Where do members get coffee deals?',
+        id: 'tours',
+        category: 'Experiences',
+        question: 'How do I book tours and activities?',
         answer:
-          'Frequent-Seas has member rates on the esplanade. Check Explore for all café perks, or pick up a marketplace coffee deal in Trip Help.',
-        utilityHref: '/trip-help/marketplace/coffee-deals',
+          'Browse Tours in Explore or Trip Help for reef days, sails, and island trips. Featured partners and paid experiences help keep membership free.',
+        utilityHref: '/trip-help/marketplace/tours-experiences',
       },
       {
         id: 'showers',

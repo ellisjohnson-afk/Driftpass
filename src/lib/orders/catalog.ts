@@ -4,6 +4,7 @@ import {
   type TripUtility,
   type TripUtilitySlug,
 } from '@/lib/trip-help/constants'
+import { getTripTour } from '@/lib/trip-help/tours'
 
 import type { PurchasableProductType } from '@/lib/orders/types'
 
@@ -38,11 +39,23 @@ const MARKETPLACE_PRICING: Record<string, { priceAudCents: number; partnerSlug: 
     serviceType: 'gym_day_pass',
     expiryHours: 24,
   },
-  'coffee-deals': {
-    priceAudCents: 299,
-    partnerSlug: 'frequent-seas',
-    serviceType: 'coffee',
-    expiryHours: 12,
+  'reef-snorkel-day': {
+    priceAudCents: 8900,
+    partnerSlug: 'whitsunday-reef-adventures',
+    serviceType: 'tour_reef_day',
+    expiryHours: 72,
+  },
+  'island-day-sail': {
+    priceAudCents: 12000,
+    partnerSlug: 'coral-sea-sailing',
+    serviceType: 'tour_island_sail',
+    expiryHours: 72,
+  },
+  'sunset-sail': {
+    priceAudCents: 6500,
+    partnerSlug: 'coral-sea-sailing',
+    serviceType: 'tour_sunset_sail',
+    expiryHours: 48,
   },
 }
 
@@ -70,9 +83,27 @@ export function getPurchasableTripHelpProduct(slug: string): PurchasableProduct 
 }
 
 export function getPurchasableMarketplaceProduct(slug: string): PurchasableProduct | null {
-  const item = TRIP_MARKETPLACE.find((entry) => entry.slug === slug)
   const pricing = MARKETPLACE_PRICING[slug]
-  if (!item || !pricing) return null
+  if (!pricing) return null
+
+  const tour = getTripTour(slug)
+  const item = TRIP_MARKETPLACE.find((entry) => entry.slug === slug)
+
+  if (tour) {
+    return {
+      type: 'marketplace',
+      slug: tour.slug,
+      name: tour.title,
+      description: tour.description,
+      priceAudCents: pricing.priceAudCents,
+      partnerSlug: pricing.partnerSlug,
+      serviceType: pricing.serviceType,
+      expiryHours: pricing.expiryHours,
+      stripeProductName: `${tour.title} · DriftPass`,
+    }
+  }
+
+  if (!item) return null
 
   return {
     type: 'marketplace',

@@ -7,7 +7,7 @@ import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { formatDate } from '@/lib/utils/format'
-import { getPerkDiscountLabel, getPerkImageUrl } from '@/lib/perks/constants'
+import { getPerkDiscountLabel, getPerkImageUrl, EXPLORE_EXCLUDED_PARTNER_SLUGS } from '@/lib/perks/constants'
 import { MembershipCard } from '@/components/pass/MembershipCard'
 import { HomeDealCard } from '@/components/home/HomeDealCard'
 import { NoDealsNearbyEmptyState } from '@/components/ui'
@@ -26,7 +26,7 @@ export default async function HomePage() {
   const admin = createAdminClient()
   const { data: sub } = await admin
     .from('subscriptions')
-    .select('status, cancel_at_period_end, current_period_end, created_at')
+    .select('status, cancel_at_period_end, current_period_end, created_at, stripe_subscription_id')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -53,7 +53,9 @@ export default async function HomePage() {
   const memberName = profile?.full_name ?? user.email?.split('@')[0] ?? 'Member'
   const memberSince = sub.created_at ? formatDate(sub.created_at) : undefined
 
-  const deals = (partners ?? []).map((partner) => {
+  const deals = (partners ?? [])
+    .filter((partner) => !EXPLORE_EXCLUDED_PARTNER_SLUGS.has(partner.slug))
+    .map((partner) => {
     const category = partner.category as PartnerCategory
     return {
       id: partner.id,
@@ -95,7 +97,7 @@ export default async function HomePage() {
         />
       </Link>
 
-      {sub.cancel_at_period_end && sub.current_period_end ? (
+      {sub.cancel_at_period_end && sub.current_period_end && sub.stripe_subscription_id ? (
         <div className="rounded-xl border border-yellow-800 bg-yellow-900/20 px-4 py-3 text-sm text-yellow-400">
           Your membership ends on {formatDate(sub.current_period_end)}.{' '}
           <Link href="/account" className="underline">

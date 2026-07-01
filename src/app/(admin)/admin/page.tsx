@@ -53,9 +53,9 @@ export default async function AdminPage() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { label: 'Active subscribers', value: totalSubscribers ?? 0, color: 'text-[#00FF7F]' },
+            { label: 'Members', value: totalSubscribers ?? 0, color: 'text-[#00FF7F]' },
             { label: 'Active partners', value: totalPartners ?? 0, color: 'text-[#FF6B35]' },
-            { label: 'MRR (est.)', value: formatAUD((totalSubscribers ?? 0) * 4700), color: 'text-white' },
+            { label: 'Membership', value: 'Free', color: 'text-white' },
             { label: 'Phase', value: process.env.NEXT_PUBLIC_PHASE ?? '2', color: 'text-[#9CA3AF]' },
           ].map(({ label, value, color }) => (
             <div key={label} className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-4">

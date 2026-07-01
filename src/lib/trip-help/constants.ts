@@ -12,6 +12,7 @@ export interface TripUtility {
   shortLabel: string
   tagline: string
   partnerSlug: string
+  partnerDisplayName: string
   serviceType: string
   description: string
   features: string[]
@@ -27,6 +28,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     shortLabel: 'Luggage',
     tagline: 'Ditch your bags, explore the lagoon',
     partnerSlug: 'le-shack',
+    partnerDisplayName: 'Le Shack',
     serviceType: 'luggage_storage',
     description:
       'Lockers on Shute Harbour Rd so you can swim, sail, or wander the esplanade bag-free. CCTV monitored, all sizes welcome — pay in Trip Help and collect with your PIN.',
@@ -46,6 +48,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     shortLabel: 'Showers',
     tagline: 'Refresh between adventures',
     partnerSlug: 'le-shack',
+    partnerDisplayName: 'Le Shack',
     serviceType: 'shower',
     description:
       'Hot showers when you need them — between hostel check-out, a bus connection, or a day on the water. Towels available at Le Shack.',
@@ -60,6 +63,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     shortLabel: 'Laundry',
     tagline: 'Wash, dry, and keep moving',
     partnerSlug: 'le-shack',
+    partnerDisplayName: 'Le Shack',
     serviceType: 'laundry',
     description:
       'Drop a load at Le Shack and explore while it dries. Same-day turnaround — handy for backpackers and van lifers passing through.',
@@ -74,6 +78,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     shortLabel: 'Coworking',
     tagline: 'WiFi, coffee & a quiet desk',
     partnerSlug: 'frequent-seas',
+    partnerDisplayName: 'Frequent-Seas',
     serviceType: 'coworking',
     description:
       'Half-day desk access at Frequent-Seas on The Esplanade — fast WiFi, power, and coffee included. Built for nomads between island trips.',
@@ -88,6 +93,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     shortLabel: 'Water',
     tagline: 'Top up your van tank',
     partnerSlug: 'frequent-seas',
+    partnerDisplayName: 'Frequent-Seas',
     serviceType: 'water_fill',
     description:
       'Drinking water for bottles and van tanks at Frequent-Seas. Skip the petrol-station hunt — buy a refill pass and collect on the spot.',
@@ -102,6 +108,7 @@ export const TRIP_UTILITIES: TripUtility[] = [
     shortLabel: 'Transfers',
     tagline: 'Scooters, bikes, and local rides',
     partnerSlug: 'le-shack',
+    partnerDisplayName: 'Le Shack',
     serviceType: 'scooter_hire',
     description:
       'Scooters and bikes from Le Shack — the easy way to reach the marina, lagoon, or your accommodation without a taxi.',
@@ -119,6 +126,8 @@ export interface MarketplaceItem {
   priceLabel: string
   emoji: string
   href: string
+  partnerSlug: string
+  partnerDisplayName: string
 }
 
 export const TRIP_MARKETPLACE: MarketplaceItem[] = [
@@ -129,22 +138,18 @@ export const TRIP_MARKETPLACE: MarketplaceItem[] = [
     priceLabel: '$5.99',
     emoji: '🏋️',
     href: '/trip-help/marketplace/gym-day-pass',
-  },
-  {
-    slug: 'coffee-deals',
-    title: 'Coffee Deal',
-    description: 'Member coffee at Frequent-Seas',
-    priceLabel: '$2.99',
-    emoji: '☕',
-    href: '/trip-help/marketplace/coffee-deals',
+    partnerSlug: 'airlie-beach-fit',
+    partnerDisplayName: 'Airlie Beach Fit',
   },
   {
     slug: 'tours-experiences',
     title: 'Tours & Experiences',
     description: 'Reef days, sails & island trips',
-    priceLabel: 'From $20',
+    priceLabel: 'From $65',
     emoji: '🚢',
-    href: '/perks',
+    href: '/trip-help/marketplace/tours-experiences',
+    partnerSlug: '',
+    partnerDisplayName: '',
   },
 ]
 

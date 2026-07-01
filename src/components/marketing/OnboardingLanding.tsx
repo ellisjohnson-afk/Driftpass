@@ -2,10 +2,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 const FEATURES = [
-  { emoji: '🏋️', label: 'Gym Access' },
-  { emoji: '☕', label: 'Coffee & Perks' },
-  { emoji: '🏷️', label: 'Member Discounts' },
-  { emoji: '🧳', label: 'Travel Essentials' },
+  { emoji: '🧳', label: 'Trip Help' },
+  { emoji: '🚢', label: 'Tours' },
+  { emoji: '🏷️', label: 'Member Deals' },
+  { emoji: '📍', label: 'Local Guide' },
 ] as const
 
 const HERO_IMAGE =
@@ -48,8 +48,8 @@ export function OnboardingLanding() {
             Travel Better.
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-center text-sm leading-relaxed text-drift-text-muted">
-            One membership for the Whitsundays and beyond — member deals, traveller essentials, and
-            local perks from $7.99/week.
+            Free membership for the Whitsundays and beyond — member deals, Trip Help essentials, tours,
+            and local discovery.
           </p>
 
           <div className="mt-8 grid grid-cols-4 gap-3">
@@ -72,7 +72,7 @@ export function OnboardingLanding() {
           </Link>
 
           <p className="mt-4 text-center text-xs text-drift-text-muted">
-            $7.99/week · Cancel anytime
+            Free membership · Pay for add-ons when you need them
           </p>
 
           <p className="mt-6 text-center text-sm text-drift-text-muted">

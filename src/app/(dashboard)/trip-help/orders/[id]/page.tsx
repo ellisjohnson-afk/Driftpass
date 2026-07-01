@@ -5,6 +5,7 @@ import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { CollectionReceiptCard } from '@/components/orders'
 import { fetchUserOrderById } from '@/lib/orders/fetch-orders'
+import { formatPartnerAddress, resolvePartnerDirectionsUrl } from '@/lib/partners/detail'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,6 +33,19 @@ export default async function TripHelpOrderDetailPage({
       ? 'expired'
       : (voucher.status as 'paid' | 'collected' | 'expired')
 
+  const partnerAddress = partner ? formatPartnerAddress(partner) : undefined
+  const directionsUrl = partner
+    ? resolvePartnerDirectionsUrl({
+        name: partner.name,
+        address: partner.address,
+        city: partner.city,
+        state: partner.state,
+        lat: partner.lat,
+        lng: partner.lng,
+        google_place_id: partner.google_place_id,
+      })
+    : undefined
+
   return (
     <div className="animate-fade-in space-y-6 pb-4">
       <Link
@@ -44,7 +58,8 @@ export default async function TripHelpOrderDetailPage({
       <CollectionReceiptCard
         productName={voucher.product_name}
         partnerName={partner?.name ?? 'Partner'}
-        partnerAddress={partner ? `${partner.address}, ${partner.city}` : undefined}
+        partnerAddress={partnerAddress}
+        directionsUrl={displayStatus === 'paid' ? directionsUrl : undefined}
         collectionPin={voucher.collection_pin}
         amountAudCents={voucher.amount_aud_cents}
         expiresAt={voucher.expires_at}
@@ -53,7 +68,7 @@ export default async function TripHelpOrderDetailPage({
 
       {displayStatus === 'paid' ? (
         <p className="rounded-2xl border border-drift-gold-to/30 bg-drift-gold-gradient/10 px-4 py-3 text-center text-sm text-drift-gold-mid">
-          Show this screen at the counter. Staff will enter your collection PIN on their tablet.
+          Head to {partner?.name ?? 'the partner'} and show this screen at the counter. Staff will enter your collection PIN on their tablet.
         </p>
       ) : null}
 

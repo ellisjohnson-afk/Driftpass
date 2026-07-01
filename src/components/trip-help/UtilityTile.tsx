@@ -78,20 +78,28 @@ export interface UtilityTileProps {
   slug: TripUtilitySlug
   label: string
   href: string
+  partnerName?: string
+  priceLabel?: string
   className?: string
 }
 
-export function UtilityTile({ slug, label, href, className }: UtilityTileProps) {
+export function UtilityTile({ slug, label, href, partnerName, priceLabel, className }: UtilityTileProps) {
   return (
     <Link
       href={href}
       className={cn(
-        'flex flex-col items-center justify-center gap-2 rounded-2xl border border-drift-border/60 bg-drift-navy-light px-3 py-5 text-center transition-colors hover:border-drift-gold-to/40 hover:bg-drift-navy',
+        'flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-drift-border/60 bg-drift-navy-light px-2 py-4 text-center transition-colors hover:border-drift-gold-to/40 hover:bg-drift-navy',
         className
       )}
     >
       <TripUtilityIcon slug={slug} />
       <span className="text-xs font-semibold leading-tight text-white">{label}</span>
+      {partnerName ? (
+        <span className="line-clamp-1 text-[10px] text-drift-text-muted">{partnerName}</span>
+      ) : null}
+      {priceLabel ? (
+        <span className="text-[10px] font-bold text-drift-gold-mid">{priceLabel}</span>
+      ) : null}
     </Link>
   )
 }

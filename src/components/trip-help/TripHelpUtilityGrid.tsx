@@ -13,7 +13,9 @@ export function TripHelpUtilityGrid({ className }: TripHelpUtilityGridProps) {
         <UtilityTile
           key={utility.slug}
           slug={utility.slug}
-          label={utility.label}
+          label={utility.shortLabel}
+          partnerName={utility.partnerDisplayName}
+          priceLabel={utility.priceLabel}
           href={`/trip-help/${utility.slug}`}
         />
       ))}

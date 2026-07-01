@@ -2,19 +2,19 @@ const STEPS = [
   {
     number: 1,
     title: 'JOIN',
-    description: 'Become a member for $7.99 per week — billed weekly, cancel anytime.',
+    description: 'Sign up free in under a minute — no card required.',
   },
   {
     number: 2,
     title: 'EXPLORE',
     description:
-      'Browse founding partner deals, book Trip Help utilities, and open your Airlie Beach welcome guide.',
+      'Browse partner deals, book Trip Help utilities, and open your Airlie Beach welcome guide.',
   },
   {
     number: 3,
     title: 'SAVE',
     description:
-      'Show your rotating pass PIN at partners, or a collection receipt PIN for paid Trip Help add-ons.',
+      'Show your rotating pass PIN at partners, or pay for Trip Help add-ons, tours & local experiences.',
   },
 ] as const
 

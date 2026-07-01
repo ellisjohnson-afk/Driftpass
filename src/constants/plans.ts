@@ -8,21 +8,21 @@ import type { Plan, PlanSlug } from '@/types'
 // ============================================================
 
 export const MEMBERSHIP_INCLUSIONS = [
+  'Free digital pass — no card required',
   'Member discounts at founding partners',
   'Trip Help — luggage, showers, WiFi & more',
+  'Tours, activities & local experiences',
   'Airlie Beach welcome guide & local FAQ',
   'Rotating pass PIN for partner check-in',
-  'Marketplace deals on gym, coffee & activities',
-  'Growing East Coast partner network',
-  'Cancel anytime',
+  'Featured local businesses & shoutouts',
 ] as const
 
-/** V2 default — A$7.99/week */
+/** V2 default — free membership; revenue via Trip Help upsells */
 export const MEMBERSHIP_PLAN: Plan = {
   id: 'membership',
   name: 'Drift Pass Membership',
   slug: 'membership',
-  price_aud_cents: 799,
+  price_aud_cents: 0,
   credits_per_month: 0,
   stripe_price_id: process.env.STRIPE_MEMBERSHIP_PRICE_ID ?? '',
   audience_type: 'backpacker',

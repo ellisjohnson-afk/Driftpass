@@ -129,7 +129,7 @@ function SignupForm() {
     <AuthShell>
       <AuthCard
         title="Create your pass"
-        subtitle={`Starting with the ${plan} plan · $7.99/week`}
+        subtitle="Free membership — get your pass in seconds"
       >
         {error ? <AuthAlert tone="error">{error}</AuthAlert> : null}
         {info ? <AuthAlert tone="success">{info}</AuthAlert> : null}

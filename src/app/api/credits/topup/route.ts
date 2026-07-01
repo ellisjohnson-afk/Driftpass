@@ -39,6 +39,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid package' }, { status: 400 })
   }
 
+  if (!sub?.stripe_customer_id) {
+    return NextResponse.json(
+      { error: 'Credit top-ups are only available on legacy paid plans' },
+      { status: 403 }
+    )
+  }
+
   const pkg = TOPUP_PACKAGES[parsed.data.packageIndex]
   if (!pkg) {
     return NextResponse.json({ error: 'Invalid package index' }, { status: 400 })

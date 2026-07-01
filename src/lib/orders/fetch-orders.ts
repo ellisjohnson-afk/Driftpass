@@ -38,7 +38,7 @@ export async function fetchUserOrderById(
   if (order.partner_id) {
     const { data: partner } = await supabase
       .from('partners')
-      .select('name, slug, address, city')
+      .select('name, slug, address, city, state, lat, lng, google_place_id')
       .eq('id', order.partner_id)
       .maybeSingle()
     partners = partner

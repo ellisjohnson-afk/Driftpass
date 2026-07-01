@@ -72,8 +72,8 @@ export interface Subscription {
   user_id: string
   plan_id: string
   plan?: Plan
-  stripe_subscription_id: string
-  stripe_customer_id: string
+  stripe_subscription_id: string | null
+  stripe_customer_id: string | null
   status: SubscriptionStatus
   current_period_start: string
   current_period_end: string

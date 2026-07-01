@@ -18,7 +18,12 @@ export function TripHelpMarketplace({ className }: TripHelpMarketplaceProps) {
       <div className="space-y-3">
         {TRIP_MARKETPLACE.map((item) => {
           const purchasable = Boolean(getPurchasableMarketplaceProduct(item.slug))
-          const href = purchasable ? `/trip-help/marketplace/${item.slug}` : item.href
+          const href =
+            item.slug === 'tours-experiences'
+              ? item.href
+              : purchasable
+                ? `/trip-help/marketplace/${item.slug}`
+                : item.href
 
           return (
           <Link
@@ -31,7 +36,10 @@ export function TripHelpMarketplace({ className }: TripHelpMarketplaceProps) {
             </span>
             <div className="min-w-0 flex-1">
               <p className="font-semibold text-white">{item.title}</p>
-              <p className="text-sm text-drift-text-muted">{item.description}</p>
+              <p className="text-sm text-drift-text-muted">
+                {item.partnerDisplayName ? `${item.partnerDisplayName} · ` : ''}
+                {item.description}
+              </p>
             </div>
             <span className="shrink-0 text-sm font-bold text-drift-gold-mid">{item.priceLabel}</span>
           </Link>

@@ -6,6 +6,7 @@ import { stripe, STRIPE_PRICE_IDS } from '@/lib/stripe/config'
 import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getAppOriginFromRequest } from '@/lib/auth/app-origin'
 import { PASS_ACTIVE_STATUSES } from '@/lib/subscriptions/active-status'
+import { activateFreeMembership } from '@/lib/subscriptions/free-membership'
 
 const CreateSubscriptionSchema = z.object({
   planSlug: z
@@ -13,7 +14,7 @@ const CreateSubscriptionSchema = z.object({
     .default('membership'),
 })
 
-// POST /api/subscriptions — create Stripe Checkout session
+// POST /api/subscriptions — activate free membership or create Stripe Checkout (legacy plans)
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -30,6 +31,16 @@ export async function POST(req: NextRequest) {
   }
 
   const { planSlug } = parsed.data
+  const appOrigin = getAppOriginFromRequest(req)
+
+  if (planSlug === 'membership') {
+    const { alreadyActive } = await activateFreeMembership(user.id)
+    const redirectPath = alreadyActive ? '/pass' : '/pass'
+    return NextResponse.json({
+      url: appUrlAt(appOrigin, redirectPath, alreadyActive ? undefined : { joined: 'true' }),
+    })
+  }
+
   const priceId = STRIPE_PRICE_IDS[planSlug]
 
   if (!priceId) {
@@ -98,7 +109,6 @@ export async function POST(req: NextRequest) {
   }
 
   // Return to the same origin as the request so auth cookies match (localhost in dev).
-  const appOrigin = getAppOriginFromRequest(req)
   // Stripe replaces {CHECKOUT_SESSION_ID} literally — must not URL-encode the braces.
   const accountSuccessBase = appUrlAt(appOrigin, '/account', { subscribed: 'true' })
   const successUrl = `${accountSuccessBase}&session_id={CHECKOUT_SESSION_ID}`
@@ -147,6 +157,17 @@ export async function DELETE(_req: NextRequest) {
 
   if (!sub) {
     return NextResponse.json({ error: 'No active subscription' }, { status: 404 })
+  }
+
+  if (!sub.stripe_subscription_id) {
+    const admin = createAdminClient()
+    await admin
+      .from('subscriptions')
+      .update({ status: 'canceled', cancel_at_period_end: false })
+      .eq('user_id', user.id)
+      .in('status', [...PASS_ACTIVE_STATUSES])
+
+    return NextResponse.json({ message: 'Membership canceled' })
   }
 
   // Cancel at period end — subscriber retains access until billing date

@@ -24,5 +24,14 @@ export interface OrderVoucher {
 }
 
 export interface OrderVoucherWithPartner extends OrderVoucher {
-  partners: { name: string; slug: string; address: string; city: string } | null
+  partners: {
+    name: string
+    slug: string
+    address: string
+    city: string
+    state?: string | null
+    lat?: number | null
+    lng?: number | null
+    google_place_id?: string | null
+  } | null
 }

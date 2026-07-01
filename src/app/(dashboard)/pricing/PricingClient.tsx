@@ -143,7 +143,7 @@ export default function PricingClient({
         ) : null}
 
         <p className="text-center text-[11px] leading-relaxed text-drift-text-subtle">
-          Secure checkout via Stripe. By starting membership you agree to our{' '}
+          Free membership — pay only for Trip Help add-ons and experiences. By joining you agree to our{' '}
           <Link href="/terms" className="underline hover:text-drift-text-muted">
             terms
           </Link>

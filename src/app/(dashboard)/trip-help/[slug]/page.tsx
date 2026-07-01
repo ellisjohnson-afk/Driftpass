@@ -7,8 +7,13 @@ import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getTripUtility } from '@/lib/trip-help/constants'
 import { getPurchasableTripHelpProduct } from '@/lib/orders/catalog'
-import { resolvePartnerOpeningHours, getPartnerDirectionsUrl } from '@/lib/partners/detail'
+import {
+  formatPartnerAddress,
+  resolvePartnerDirectionsUrl,
+  resolvePartnerOpeningHours,
+} from '@/lib/partners/detail'
 import { fetchPartnerBySlug } from '@/lib/partners/fetch'
+import { EXPLORE_EXCLUDED_PARTNER_SLUGS } from '@/lib/perks/constants'
 import { UtilityDetailContent } from '@/components/trip-help'
 
 export const dynamic = 'force-dynamic'
@@ -18,6 +23,7 @@ type TripHelpPartnerRow = {
   slug: string
   address: string
   city: string
+  state: string
   lat: number | null
   lng: number | null
   google_place_id: string | null
@@ -55,7 +61,7 @@ export default async function UtilityDetailPage({
   const { data: partner } = await fetchPartnerBySlug<TripHelpPartnerRow>(
     admin,
     utility.partnerSlug,
-    'name, slug, address, city, lat, lng, google_place_id, partner_services(service_type, is_active)'
+    'name, slug, address, city, state, lat, lng, google_place_id, partner_services(service_type, is_active)'
   )
 
   const hours = partner
@@ -70,29 +76,40 @@ export default async function UtilityDetailPage({
 
   const purchasable = Boolean(getPurchasableTripHelpProduct(utility.slug) && partner && hasService)
 
-  const directionsUrl =
-    partner?.lat != null && partner?.lng != null
-      ? getPartnerDirectionsUrl(
-          partner.lat,
-          partner.lng,
-          partner.name,
-          partner.google_place_id
-        )
+  const partnerAddress = partner
+    ? formatPartnerAddress(partner)
+    : 'Airlie Beach, QLD'
+
+  const directionsUrl = partner
+    ? resolvePartnerDirectionsUrl({
+        name: partner.name,
+        address: partner.address,
+        city: partner.city,
+        state: partner.state,
+        lat: partner.lat,
+        lng: partner.lng,
+        google_place_id: partner.google_place_id,
+      })
+    : undefined
+
+  const partnerHref =
+    partner && !EXPLORE_EXCLUDED_PARTNER_SLUGS.has(partner.slug)
+      ? `/perks/${partner.slug}`
       : undefined
 
   return (
     <UtilityDetailContent
       utility={utility}
-      partnerName={partner?.name ?? 'DriftPass Partner'}
-      partnerAddress={
-        partner ? `${partner.address}, ${partner.city}` : 'Airlie Beach, QLD'
-      }
-      partnerHref={partner ? `/perks/${partner.slug}` : '/perks'}
+      partnerName={partner?.name ?? utility.partnerDisplayName}
+      partnerAddress={partnerAddress}
+      partnerHref={partnerHref}
       isAvailable={Boolean(partner && hasService)}
       hoursSummary={hours?.summary}
       isOpen={hours?.isOpen}
       purchasable={purchasable}
       directionsUrl={directionsUrl}
+      partnerLat={partner?.lat}
+      partnerLng={partner?.lng}
     />
   )
 }

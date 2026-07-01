@@ -38,6 +38,8 @@ const SLUG_HOURS: Record<string, PartnerHoursDay[]> = {
   'frequent-seas': [{ day: 'Mon – Sun', hours: '7:00 am – 5:00 pm' }],
   'le-shack': [{ day: 'Mon – Sun', hours: '8:00 am – 6:00 pm' }],
   'frozen-yogurt-place': [{ day: 'Mon – Sun', hours: '10:00 am – 8:00 pm' }],
+  'whitsunday-reef-adventures': [{ day: 'Mon – Sun', hours: 'Check-in from 7:00 am' }],
+  'coral-sea-sailing': [{ day: 'Mon – Sun', hours: 'Day sails 8:00 am · Sunset 4:30 pm' }],
 }
 
 const DEFAULT_HOURS: PartnerHoursDay[] = [
@@ -117,6 +119,8 @@ function isPartnerOpenNowLegacy(slug: string, timezone: string): boolean {
   if (slug === 'frequent-seas') return hour >= 7 && hour < 17
   if (slug === 'le-shack') return hour >= 8 && hour < 18
   if (slug === 'frozen-yogurt-place') return hour >= 10 && hour < 20
+  if (slug === 'whitsunday-reef-adventures') return hour >= 6 && hour < 18
+  if (slug === 'coral-sea-sailing') return hour >= 7 && hour < 20
 
   return isWeekend ? hour >= 10 && hour < 16 : hour >= 9 && hour < 17
 }
@@ -137,4 +141,40 @@ export function getPartnerDirectionsUrl(
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}&query_place_id=${encodeURIComponent(googlePlaceId)}`
   }
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name} @ ${lat},${lng}`)}`
+}
+
+export function formatPartnerAddress(partner: {
+  address: string
+  city: string
+  state?: string | null
+}): string {
+  return [partner.address, partner.city, partner.state].filter(Boolean).join(', ')
+}
+
+export function resolvePartnerDirectionsUrl(partner: {
+  name: string
+  address: string
+  city: string
+  state?: string | null
+  lat?: number | null
+  lng?: number | null
+  google_place_id?: string | null
+}): string | undefined {
+  if (partner.lat != null && partner.lng != null) {
+    return getPartnerDirectionsUrl(
+      partner.lat,
+      partner.lng,
+      partner.name,
+      partner.google_place_id
+    )
+  }
+
+  const addressLine = formatPartnerAddress(partner)
+  if (!addressLine) return undefined
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${partner.name}, ${addressLine}`)}`
+}
+
+export function getPartnerStaticMapUrl(lat: number, lng: number): string {
+  return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=16&size=640x280&markers=${lat},${lng},lightblue1`
 }

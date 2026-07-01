@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { cn } from '@/lib/utils/cn'
 import { NoProviderEmptyState } from '@/components/ui'
-import { DirectionsButton } from '@/components/partner/DirectionsButton'
 import { ProductPurchaseButton } from '@/components/orders'
+import { TripHelpLocationCard } from '@/components/trip-help/TripHelpLocationCard'
 import type { TripUtility } from '@/lib/trip-help/constants'
 import { TripUtilityIcon } from './UtilityTile'
 
@@ -22,34 +22,18 @@ function CheckIcon() {
   )
 }
 
-function PinIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-4 w-4 shrink-0" aria-hidden>
-      <path d="M12 21s6-5.2 6-10a6 6 0 1 0-12 0c0 4.8 6 10 6 10Z" />
-      <circle cx="12" cy="11" r="2.25" />
-    </svg>
-  )
-}
-
-function ClockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-4 w-4 shrink-0" aria-hidden>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 8v4l2.5 2.5" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 export interface UtilityDetailContentProps {
   utility: TripUtility
   partnerName: string
   partnerAddress: string
-  partnerHref: string
+  partnerHref?: string
   isAvailable?: boolean
   hoursSummary?: string
   isOpen?: boolean
   purchasable?: boolean
   directionsUrl?: string
+  partnerLat?: number | null
+  partnerLng?: number | null
 }
 
 export function UtilityDetailContent({
@@ -62,6 +46,8 @@ export function UtilityDetailContent({
   isOpen,
   purchasable = false,
   directionsUrl,
+  partnerLat,
+  partnerLng,
 }: UtilityDetailContentProps) {
   return (
     <div className="animate-fade-in -mx-4 -mt-6 pb-4">
@@ -83,6 +69,9 @@ export function UtilityDetailContent({
         </p>
         <h1 className="mt-2 text-3xl font-bold">{utility.label}</h1>
         <p className="mt-2 text-sm text-drift-text-muted">{utility.tagline}</p>
+        <p className="mt-3 text-sm text-drift-text-muted">
+          at <span className="font-semibold text-white">{partnerName}</span>
+        </p>
       </div>
 
       <div className="relative -mt-6 rounded-t-4xl border border-drift-border/60 bg-drift-navy-light px-5 pb-8 pt-6">
@@ -110,71 +99,54 @@ export function UtilityDetailContent({
           </span>
         </div>
 
-        <p className="mt-5 text-sm leading-relaxed text-drift-text-muted">{utility.description}</p>
-
         {!isAvailable ? (
           <div className="mt-5">
             <NoProviderEmptyState />
           </div>
         ) : (
           <>
-        <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {utility.features.map((feature) => (
-            <div
-              key={feature}
-              className="flex items-center gap-2 rounded-xl border border-drift-border/50 bg-drift-navy/40 px-3 py-2.5 text-sm text-white"
-            >
-              <CheckIcon />
-              {feature}
-            </div>
-          ))}
-        </div>
+            <TripHelpLocationCard
+              partnerName={partnerName}
+              partnerAddress={partnerAddress}
+              partnerHref={partnerHref}
+              serviceLabel={`Collect this service at`}
+              hoursSummary={hoursSummary ?? utility.hoursLabel}
+              isOpen={isOpen}
+              directionsUrl={directionsUrl}
+              lat={partnerLat}
+              lng={partnerLng}
+              className="mt-5"
+            />
 
-        <div className="mt-5 rounded-2xl border border-drift-border/60 bg-drift-navy/40 px-4 py-4">
-          <Link href={partnerHref} className="text-base font-bold text-white hover:text-drift-gold-mid">
-            {partnerName}
-          </Link>
-          <p className="mt-3 flex items-start gap-2 text-sm text-drift-text-muted">
-            <PinIcon />
-            {partnerAddress}
-          </p>
-          <p className="mt-2 flex items-center gap-2 text-sm text-drift-text-muted">
-            <ClockIcon />
-            <span>
-              {hoursSummary ?? utility.hoursLabel}
-              {typeof isOpen === 'boolean' ? (
-                <span
-                  className={cn(
-                    'ml-2 font-semibold',
-                    isOpen ? 'text-emerald-400' : 'text-drift-text-subtle'
-                  )}
+            <p className="mt-5 text-sm leading-relaxed text-drift-text-muted">{utility.description}</p>
+
+            <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {utility.features.map((feature) => (
+                <div
+                  key={feature}
+                  className="flex items-center gap-2 rounded-xl border border-drift-border/50 bg-drift-navy/40 px-3 py-2.5 text-sm text-white"
                 >
-                  · {isOpen ? 'Open now' : 'Closed now'}
-                </span>
-              ) : null}
-            </span>
-          </p>
-        </div>
+                  <CheckIcon />
+                  {feature}
+                </div>
+              ))}
+            </div>
 
-        {directionsUrl ? (
-          <DirectionsButton directionsUrl={directionsUrl} className="mt-4" variant="secondary" />
-        ) : null}
-
-        {purchasable ? (
-          <ProductPurchaseButton
-            productType="trip_help"
-            productSlug={utility.slug}
-            priceLabel={utility.priceLabel}
-            className="mt-6"
-          />
-        ) : (
-          <Link
-            href="/pass"
-            className="mt-6 flex w-full items-center justify-center rounded-2xl border border-drift-border bg-drift-navy-deep px-6 py-4 text-base font-semibold text-drift-gold-mid transition-colors hover:border-drift-gold-to/40 hover:text-white"
-          >
-            Show membership pass for member rate
-          </Link>
-        )}
+            {purchasable ? (
+              <ProductPurchaseButton
+                productType="trip_help"
+                productSlug={utility.slug}
+                priceLabel={utility.priceLabel}
+                className="mt-6"
+              />
+            ) : (
+              <Link
+                href="/pass"
+                className="mt-6 flex w-full items-center justify-center rounded-2xl border border-drift-border bg-drift-navy-deep px-6 py-4 text-base font-semibold text-drift-gold-mid transition-colors hover:border-drift-gold-to/40 hover:text-white"
+              >
+                Show membership pass for member rate
+              </Link>
+            )}
           </>
         )}
       </div>

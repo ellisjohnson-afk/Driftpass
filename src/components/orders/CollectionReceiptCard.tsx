@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils/cn'
+import { DirectionsButton } from '@/components/partner/DirectionsButton'
 import { formatCollectionPin } from '@/lib/orders/collection-pin'
 import { formatDate } from '@/lib/utils/format'
 
@@ -6,6 +7,7 @@ export interface CollectionReceiptCardProps {
   productName: string
   partnerName: string
   partnerAddress?: string
+  directionsUrl?: string
   collectionPin: string
   amountAudCents: number
   expiresAt: string
@@ -25,6 +27,7 @@ export function CollectionReceiptCard({
   productName,
   partnerName,
   partnerAddress,
+  directionsUrl,
   collectionPin,
   amountAudCents,
   expiresAt,
@@ -47,6 +50,15 @@ export function CollectionReceiptCard({
       <p className="mt-1 text-center text-sm text-drift-navy-deep/75">{partnerName}</p>
       {partnerAddress ? (
         <p className="mt-1 text-center text-xs text-drift-navy-deep/60">{partnerAddress}</p>
+      ) : null}
+
+      {directionsUrl ? (
+        <DirectionsButton
+          directionsUrl={directionsUrl}
+          label="Get directions to collect"
+          className="mt-4"
+          variant="secondary"
+        />
       ) : null}
 
       <div className="mt-6 flex justify-center gap-2 sm:gap-3">

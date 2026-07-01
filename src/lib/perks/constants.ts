@@ -1,6 +1,6 @@
 import type { PartnerCategory } from '@/types'
 
-export type PerkFilterId = 'all' | 'gym' | 'coffee' | 'tours' | 'food' | 'coworking'
+export type PerkFilterId = 'all' | 'gym' | 'tours' | 'food' | 'coworking'
 
 export interface PerkFilter {
   id: PerkFilterId
@@ -12,12 +12,6 @@ export interface PerkFilter {
 export const PERK_FILTERS: PerkFilter[] = [
   { id: 'all', label: 'All' },
   { id: 'gym', label: 'Gym', categories: ['gym_fitness'] },
-  {
-    id: 'coffee',
-    label: 'Coffee',
-    categories: ['cafe_cowork'],
-    serviceTypes: ['cafe_session'],
-  },
   { id: 'tours', label: 'Tours', categories: ['tours', 'events', 'scooter_hire'] },
   { id: 'food', label: 'Food', categories: ['restaurant', 'kitchen'] },
   {
@@ -27,6 +21,9 @@ export const PERK_FILTERS: PerkFilter[] = [
     serviceTypes: ['coworking'],
   },
 ]
+
+/** Partners monetised via Trip Help upsells — not shown as free Explore perks */
+export const EXPLORE_EXCLUDED_PARTNER_SLUGS = new Set(['frequent-seas'])
 
 const CATEGORY_DISCOUNT: Partial<Record<PartnerCategory, string>> = {
   gym_fitness: '20% off',
@@ -48,9 +45,10 @@ const CATEGORY_DISCOUNT: Partial<Record<PartnerCategory, string>> = {
 
 const SLUG_DISCOUNT: Record<string, string> = {
   'airlie-beach-fit': '20% off',
-  'frequent-seas': '15% off',
   'le-shack': 'Member rate',
   'frozen-yogurt-place': '20% off',
+  'whitsunday-reef-adventures': 'Member rate',
+  'coral-sea-sailing': 'Member rate',
 }
 
 const CATEGORY_IMAGE: Partial<Record<PartnerCategory, string>> = {
@@ -95,6 +93,10 @@ const SLUG_IMAGE: Record<string, string> = {
     'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=600&q=80',
   'frozen-yogurt-place':
     'https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=600&q=80',
+  'whitsunday-reef-adventures':
+    'https://images.unsplash.com/photo-1544551763-77ef2d0cfcb0?auto=format&fit=crop&w=600&q=80',
+  'coral-sea-sailing':
+    'https://images.unsplash.com/photo-1544552866-d3ed42536cfd?auto=format&fit=crop&w=600&q=80',
 }
 
 const DEFAULT_IMAGE =
@@ -107,3 +109,4 @@ export function getPerkDiscountLabel(slug: string, category: PartnerCategory): s
 export function getPerkImageUrl(slug: string, category: PartnerCategory): string {
   return SLUG_IMAGE[slug] ?? CATEGORY_IMAGE[category] ?? DEFAULT_IMAGE
 }
+

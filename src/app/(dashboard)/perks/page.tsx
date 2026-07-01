@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
-import { getPerkDiscountLabel, getPerkImageUrl } from '@/lib/perks/constants'
+import { getPerkDiscountLabel, getPerkImageUrl, EXPLORE_EXCLUDED_PARTNER_SLUGS } from '@/lib/perks/constants'
 import { PerksExplorer, type PerkListItem } from '@/components/perks'
 import type { PartnerCategory } from '@/types'
 
@@ -41,7 +41,9 @@ export default async function PerksPage() {
     .order('is_featured', { ascending: false })
     .order('name', { ascending: true })
 
-  const perks: PerkListItem[] = (partners ?? []).map((partner) => {
+  const perks: PerkListItem[] = (partners ?? [])
+    .filter((partner) => !EXPLORE_EXCLUDED_PARTNER_SLUGS.has(partner.slug))
+    .map((partner) => {
     const category = partner.category as PartnerCategory
     const serviceTypes = (partner.partner_services ?? [])
       .filter((service) => service.is_active)
