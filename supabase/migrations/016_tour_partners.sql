@@ -62,7 +62,7 @@ with partner as (select id from public.partners where slug = 'whitsunday-reef-ad
 insert into public.partner_services (partner_id, service_type, name, credit_cost, aud_payout_cents, max_daily_redemptions)
 select partner.id, s.service_type, s.name, s.credit_cost, s.aud_payout_cents, s.max_daily
 from partner, (values
-  ('tour_reef_day', 'Reef Snorkel Day Trip', 0, 7500, 40)
+  ('tour_reef_day', 'Reef Snorkel Day Trip', 1, 7500, 40)
 ) as s(service_type, name, credit_cost, aud_payout_cents, max_daily)
 on conflict (partner_id, service_type) do update set
   name = excluded.name,
@@ -73,8 +73,8 @@ with partner as (select id from public.partners where slug = 'coral-sea-sailing'
 insert into public.partner_services (partner_id, service_type, name, credit_cost, aud_payout_cents, max_daily_redemptions)
 select partner.id, s.service_type, s.name, s.credit_cost, s.aud_payout_cents, s.max_daily
 from partner, (values
-  ('tour_island_sail', 'Island Day Sail', 0, 10000, 25),
-  ('tour_sunset_sail', 'Sunset Sail', 0, 5500, 30)
+  ('tour_island_sail', 'Island Day Sail', 1, 10000, 25),
+  ('tour_sunset_sail', 'Sunset Sail', 1, 5500, 30)
 ) as s(service_type, name, credit_cost, aud_payout_cents, max_daily)
 on conflict (partner_id, service_type) do update set
   name = excluded.name,
