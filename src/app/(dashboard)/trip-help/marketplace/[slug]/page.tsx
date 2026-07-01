@@ -6,8 +6,11 @@ import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
 import { getPurchasableMarketplaceProduct } from '@/lib/orders/catalog'
-import { TRIP_MARKETPLACE } from '@/lib/trip-help/constants'
-import { getTripTour } from '@/lib/trip-help/tours'
+import {
+  fetchActiveTripHelpProducts,
+  fetchTripHelpProductBySlug,
+} from '@/lib/trip-help/fetch-products'
+import { toTripHelpProductDisplay } from '@/lib/trip-help/product-types'
 import { ProductPurchaseButton } from '@/components/orders'
 import { TripHelpLocationCard, TripToursHub } from '@/components/trip-help'
 import {
@@ -29,6 +32,8 @@ type MarketplacePartnerRow = {
   lat: number | null
   lng: number | null
   google_place_id: string | null
+  opening_hours: unknown
+  timezone: string | null
 }
 
 function BackIcon() {
@@ -47,49 +52,13 @@ function CheckIcon() {
   )
 }
 
-export default async function MarketplacePurchasePage({
-  params,
-}: {
-  params: { slug: string }
-}) {
-  if (params.slug === 'tours-experiences') {
-    const supabase = await createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    const appOrigin = await getServerAppOrigin()
-    if (!user) {
-      redirect(appUrlAt(appOrigin, '/login', { next: '/trip-help/marketplace/tours-experiences' }))
-    }
-
-    const admin = createAdminClient()
-    const { data: sub } = await admin
-      .from('subscriptions')
-      .select('status')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-
-    if (!sub || !isPassActive(sub.status)) {
-      redirect(appUrlAt(appOrigin, '/pricing'))
-    }
-
-    return <TripToursHub />
-  }
-
-  const tour = getTripTour(params.slug)
-  const item = TRIP_MARKETPLACE.find((entry) => entry.slug === params.slug)
-  const product = getPurchasableMarketplaceProduct(params.slug)
-
-  if ((!tour && !item) || !product) notFound()
-
+async function requireActiveMember(nextPath: string) {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
   const appOrigin = await getServerAppOrigin()
-  if (!user) redirect(appUrlAt(appOrigin, '/login', { next: `/trip-help/marketplace/${params.slug}` }))
+  if (!user) redirect(appUrlAt(appOrigin, '/login', { next: nextPath }))
 
   const admin = createAdminClient()
   const { data: sub } = await admin
@@ -104,10 +73,37 @@ export default async function MarketplacePurchasePage({
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
+  return admin
+}
+
+export default async function MarketplacePurchasePage({
+  params,
+}: {
+  params: { slug: string }
+}) {
+  if (params.slug === 'tours-experiences') {
+    const admin = await requireActiveMember('/trip-help/marketplace/tours-experiences')
+    let tours: Awaited<ReturnType<typeof fetchActiveTripHelpProducts>> = []
+    try {
+      tours = await fetchActiveTripHelpProducts(admin, { hubSlug: 'tours-experiences' })
+    } catch {
+      // Migration 018 may not be applied yet
+    }
+    return <TripToursHub tours={tours} />
+  }
+
+  const admin = await requireActiveMember(`/trip-help/marketplace/${params.slug}`)
+  const productRow = await fetchTripHelpProductBySlug(admin, params.slug)
+  if (!productRow || productRow.section !== 'marketplace') notFound()
+
+  const display = toTripHelpProductDisplay(productRow)
+  const checkoutProduct = await getPurchasableMarketplaceProduct(admin, params.slug)
+  if (!checkoutProduct || !display.isPurchasable) notFound()
+
   const { data: partner } = await fetchPartnerBySlug<MarketplacePartnerRow>(
     admin,
-    product.partnerSlug,
-    'name, slug, address, city, state, lat, lng, google_place_id'
+    display.partnerSlug,
+    'name, slug, address, city, state, lat, lng, google_place_id, opening_hours, timezone'
   )
 
   const hours = partner
@@ -133,17 +129,9 @@ export default async function MarketplacePurchasePage({
       ? `/perks/${partner.slug}`
       : undefined
 
-  const title = tour?.title ?? item!.title
-  const description = tour?.description ?? item!.description
-  const longDescription = tour?.longDescription ?? item!.description
-  const emoji = tour?.emoji ?? item!.emoji
-  const priceLabel = tour?.priceLabel ?? item!.priceLabel
-  const priceSubtext = tour?.priceSubtext
-  const features = tour?.features
-  const partnerDisplayName = tour?.partnerDisplayName ?? item!.partnerDisplayName
-  const serviceLabel = tour ? 'Check in with' : 'Redeem this offer at'
-  const hoursSummary = hours?.summary ?? tour?.hoursLabel
-  const backHref = tour ? '/trip-help/marketplace/tours-experiences' : '/trip-help'
+  const isTour = Boolean(display.hubSlug)
+  const serviceLabel = isTour ? 'Check in with' : 'Redeem this offer at'
+  const backHref = isTour ? '/trip-help/marketplace/tours-experiences' : '/trip-help'
 
   return (
     <div className="animate-fade-in -mx-4 -mt-6 pb-4">
@@ -157,32 +145,35 @@ export default async function MarketplacePurchasePage({
         </Link>
 
         <span className="text-3xl" aria-hidden>
-          {emoji}
+          {display.emoji ?? '✨'}
         </span>
         <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-drift-gold-mid">
-          {tour ? 'Trip Help · Tours' : 'Trip Help Marketplace'}
+          {isTour ? 'Trip Help · Tours' : 'Trip Help Marketplace'}
         </p>
-        <h1 className="mt-2 text-3xl font-bold">{title}</h1>
-        <p className="mt-2 text-sm text-drift-text-muted">{description}</p>
+        <h1 className="mt-2 text-3xl font-bold">{display.label}</h1>
+        <p className="mt-2 text-sm text-drift-text-muted">{display.tagline ?? display.description}</p>
         <p className="mt-3 text-sm text-drift-text-muted">
-          with <span className="font-semibold text-white">{partner?.name ?? partnerDisplayName}</span>
+          with{' '}
+          <span className="font-semibold text-white">
+            {partner?.name ?? display.partnerDisplayName}
+          </span>
         </p>
       </div>
 
       <div className="relative -mt-6 rounded-t-4xl border border-drift-border/60 bg-drift-navy-light px-5 pb-8 pt-6">
         <p className="text-3xl font-bold text-white">
-          {priceLabel}
-          {priceSubtext ? (
-            <span className="ml-2 text-sm font-normal text-drift-text-muted">{priceSubtext}</span>
+          {display.priceLabel}
+          {display.priceSubtext ? (
+            <span className="ml-2 text-sm font-normal text-drift-text-muted">{display.priceSubtext}</span>
           ) : null}
         </p>
 
         <TripHelpLocationCard
-          partnerName={partner?.name ?? partnerDisplayName}
+          partnerName={partner?.name ?? display.partnerDisplayName}
           partnerAddress={partnerAddress}
           partnerHref={partnerHref}
           serviceLabel={serviceLabel}
-          hoursSummary={hoursSummary}
+          hoursSummary={hours?.summary ?? display.hoursLabel ?? undefined}
           isOpen={hours?.isOpen}
           directionsUrl={directionsUrl}
           lat={partner?.lat}
@@ -190,17 +181,17 @@ export default async function MarketplacePurchasePage({
           className="mt-5"
         />
 
-        <p className="mt-5 text-sm leading-relaxed text-drift-text-muted">{longDescription}</p>
+        <p className="mt-5 text-sm leading-relaxed text-drift-text-muted">{display.description}</p>
 
-        {tour?.meetingNote ? (
+        {display.meetingNote ? (
           <p className="mt-3 rounded-xl border border-drift-gold-to/20 bg-drift-gold-gradient/10 px-4 py-3 text-sm text-drift-gold-mid">
-            {tour.meetingNote}
+            {display.meetingNote}
           </p>
         ) : null}
 
-        {features?.length ? (
+        {display.features.length ? (
           <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {features.map((feature) => (
+            {display.features.map((feature) => (
               <div
                 key={feature}
                 className="flex items-center gap-2 rounded-xl border border-drift-border/50 bg-drift-navy/40 px-3 py-2.5 text-sm text-white"
@@ -214,8 +205,8 @@ export default async function MarketplacePurchasePage({
 
         <ProductPurchaseButton
           productType="marketplace"
-          productSlug={tour?.slug ?? item!.slug}
-          priceLabel={priceLabel}
+          productSlug={display.slug}
+          priceLabel={display.priceLabel}
           className="mt-6"
         />
       </div>

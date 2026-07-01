@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils/cn'
 import { NoProviderEmptyState } from '@/components/ui'
 import { ProductPurchaseButton } from '@/components/orders'
 import { TripHelpLocationCard } from '@/components/trip-help/TripHelpLocationCard'
-import type { TripUtility } from '@/lib/trip-help/constants'
+import type { TripHelpProductDisplay } from '@/lib/trip-help/product-types'
 import { TripUtilityIcon } from './UtilityTile'
 
 function BackIcon() {
@@ -23,7 +23,7 @@ function CheckIcon() {
 }
 
 export interface UtilityDetailContentProps {
-  utility: TripUtility
+  utility: TripHelpProductDisplay
   partnerName: string
   partnerAddress: string
   partnerHref?: string
@@ -110,7 +110,7 @@ export function UtilityDetailContent({
               partnerAddress={partnerAddress}
               partnerHref={partnerHref}
               serviceLabel={`Collect this service at`}
-              hoursSummary={hoursSummary ?? utility.hoursLabel}
+              hoursSummary={hoursSummary ?? utility.hoursLabel ?? undefined}
               isOpen={isOpen}
               directionsUrl={directionsUrl}
               lat={partnerLat}

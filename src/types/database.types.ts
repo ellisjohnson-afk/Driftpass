@@ -363,6 +363,95 @@ export interface Database {
           }
         ]
       }
+      trip_help_products: {
+        Row: {
+          id: string
+          product_type: string
+          section: string
+          slug: string
+          name: string
+          short_label: string | null
+          tagline: string | null
+          description: string
+          features: string[]
+          partner_id: string | null
+          service_type: string | null
+          price_aud_cents: number | null
+          expiry_hours: number
+          price_label: string
+          price_subtext: string | null
+          hours_label: string | null
+          meeting_note: string | null
+          emoji: string | null
+          hub_slug: string | null
+          sort_order: number
+          is_active: boolean
+          is_purchasable: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          product_type: string
+          section?: string
+          slug: string
+          name: string
+          short_label?: string | null
+          tagline?: string | null
+          description?: string
+          features?: string[]
+          partner_id?: string | null
+          service_type?: string | null
+          price_aud_cents?: number | null
+          expiry_hours?: number
+          price_label?: string
+          price_subtext?: string | null
+          hours_label?: string | null
+          meeting_note?: string | null
+          emoji?: string | null
+          hub_slug?: string | null
+          sort_order?: number
+          is_active?: boolean
+          is_purchasable?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          product_type?: string
+          section?: string
+          slug?: string
+          name?: string
+          short_label?: string | null
+          tagline?: string | null
+          description?: string
+          features?: string[]
+          partner_id?: string | null
+          service_type?: string | null
+          price_aud_cents?: number | null
+          expiry_hours?: number
+          price_label?: string
+          price_subtext?: string | null
+          hours_label?: string | null
+          meeting_note?: string | null
+          emoji?: string | null
+          hub_slug?: string | null
+          sort_order?: number
+          is_active?: boolean
+          is_purchasable?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trip_help_products_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       featured_shoutouts: {
         Row: {
           id: string

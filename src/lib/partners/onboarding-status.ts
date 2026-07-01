@@ -1,6 +1,6 @@
-import { getPurchasableMarketplaceProduct, getPurchasableTripHelpProduct } from '@/lib/orders/catalog'
-import { TRIP_MARKETPLACE, TRIP_UTILITIES } from '@/lib/trip-help/constants'
-import { TRIP_TOURS } from '@/lib/trip-help/tours'
+import { fetchCatalogProductsForPartner } from '@/lib/trip-help/fetch-products'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database.types'
 
 export interface PartnerCatalogProduct {
   type: 'trip_help' | 'marketplace'
@@ -35,47 +35,26 @@ type PartnerInput = {
 
 const PRODUCTION_ORIGIN = 'https://www.driftpass.com.au'
 
-export function getCatalogProductsForPartner(partnerSlug: string): PartnerCatalogProduct[] {
-  const products: PartnerCatalogProduct[] = []
-
-  for (const utility of TRIP_UTILITIES) {
-    if (utility.partnerSlug !== partnerSlug) continue
-    const product = getPurchasableTripHelpProduct(utility.slug)
-    if (!product) continue
-    products.push({
-      type: 'trip_help',
-      slug: product.slug,
-      name: product.name,
-      priceAudCents: product.priceAudCents,
-    })
-  }
-
-  const marketplaceSlugs = Array.from(
-    new Set([
-      ...TRIP_MARKETPLACE.map((item) => item.slug),
-      ...TRIP_TOURS.map((tour) => tour.slug),
-    ])
-  )
-
-  for (const slug of marketplaceSlugs) {
-    const product = getPurchasableMarketplaceProduct(slug)
-    if (!product || product.partnerSlug !== partnerSlug) continue
-    products.push({
-      type: 'marketplace',
-      slug: product.slug,
-      name: product.name,
-      priceAudCents: product.priceAudCents,
-    })
-  }
-
-  return products
-}
-
-export function buildPartnerOnboardingChecklist(partner: PartnerInput): PartnerOnboardingChecklist {
+export async function buildPartnerOnboardingChecklist(
+  client: SupabaseClient<Database>,
+  partner: PartnerInput
+): Promise<PartnerOnboardingChecklist> {
   const activeServices = partner.partner_services.filter((service) => service.is_active)
   const hasPayoutConfigured = activeServices.some((service) => service.aud_payout_cents > 0)
   const profileComplete = Boolean(partner.name.trim() && partner.address.trim() && partner.slug.trim())
-  const catalogProducts = getCatalogProductsForPartner(partner.slug)
+
+  let catalogProducts: PartnerCatalogProduct[] = []
+  try {
+    const products = await fetchCatalogProductsForPartner(client, partner.slug)
+    catalogProducts = products.map((product) => ({
+      type: product.productType,
+      slug: product.slug,
+      name: product.label,
+      priceAudCents: product.priceAudCents ?? 0,
+    }))
+  } catch {
+    // Migration 018 may not be applied yet
+  }
 
   const readyToLaunch =
     profileComplete &&

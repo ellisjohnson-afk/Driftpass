@@ -16,6 +16,11 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     description: 'Businesses on Explore and Trip Help',
   },
   {
+    href: '/admin/trip-help-products',
+    label: 'Trip Help products',
+    description: 'Prices, listings, and checkout',
+  },
+  {
     href: '/admin/shoutouts',
     label: 'Featured shoutouts',
     description: 'Paid placement slots',

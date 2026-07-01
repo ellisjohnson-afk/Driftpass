@@ -60,13 +60,13 @@ export async function POST(req: NextRequest) {
   }
 
   const { productType, productSlug } = parsed.data
-  const product = getPurchasableProduct(productType as PurchasableProductType, productSlug)
+  const admin = createAdminClient()
+  const product = await getPurchasableProduct(admin, productType as PurchasableProductType, productSlug)
 
   if (!product) {
     return NextResponse.json({ error: 'Product is not available for purchase' }, { status: 404 })
   }
 
-  const admin = createAdminClient()
   const { data: sub } = await admin
     .from('subscriptions')
     .select('status')

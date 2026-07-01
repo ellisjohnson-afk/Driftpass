@@ -100,7 +100,7 @@ export async function fulfillOrderFromCheckoutSession(
     throw new Error('Checkout session missing product metadata')
   }
 
-  const product = getPurchasableProduct(productType, productSlug)
+  const product = await getPurchasableProduct(admin, productType, productSlug)
   if (!product) throw new Error('Unknown product in checkout session')
 
   const profileOk = await ensureProfileExists(admin, userId)

@@ -5,8 +5,11 @@ import { redirect } from 'next/navigation'
 import { appUrlAt } from '@/lib/auth/canonical-url'
 import { getServerAppOrigin } from '@/lib/auth/app-origin.server'
 import { isPassActive } from '@/lib/subscriptions/active-status'
-import { getTripUtility } from '@/lib/trip-help/constants'
 import { getPurchasableTripHelpProduct } from '@/lib/orders/catalog'
+import {
+  fetchTripHelpProductBySlug,
+} from '@/lib/trip-help/fetch-products'
+import { toTripHelpProductDisplay } from '@/lib/trip-help/product-types'
 import {
   formatPartnerAddress,
   resolvePartnerDirectionsUrl,
@@ -27,6 +30,8 @@ type TripHelpPartnerRow = {
   lat: number | null
   lng: number | null
   google_place_id: string | null
+  opening_hours: unknown
+  timezone: string | null
   partner_services: Array<{ service_type: string; is_active: boolean }> | null
 }
 
@@ -35,8 +40,11 @@ export default async function UtilityDetailPage({
 }: {
   params: { slug: string }
 }) {
-  const utility = getTripUtility(params.slug)
-  if (!utility) notFound()
+  const admin = createAdminClient()
+  const productRow = await fetchTripHelpProductBySlug(admin, params.slug)
+  if (!productRow || productRow.section !== 'utilities') notFound()
+
+  const utility = toTripHelpProductDisplay(productRow)
 
   const supabase = await createClient()
   const {
@@ -45,7 +53,6 @@ export default async function UtilityDetailPage({
   const appOrigin = await getServerAppOrigin()
   if (!user) redirect(appUrlAt(appOrigin, '/login', { next: `/trip-help/${params.slug}` }))
 
-  const admin = createAdminClient()
   const { data: sub } = await admin
     .from('subscriptions')
     .select('status')
@@ -58,27 +65,32 @@ export default async function UtilityDetailPage({
     redirect(appUrlAt(appOrigin, '/pricing'))
   }
 
-  const { data: partner } = await fetchPartnerBySlug<TripHelpPartnerRow>(
-    admin,
-    utility.partnerSlug,
-    'name, slug, address, city, state, lat, lng, google_place_id, partner_services(service_type, is_active)'
-  )
+  const partnerSlug = utility.partnerSlug
+  const { data: partner } = partnerSlug
+    ? await fetchPartnerBySlug<TripHelpPartnerRow>(
+        admin,
+        partnerSlug,
+        'name, slug, address, city, state, lat, lng, google_place_id, opening_hours, timezone, partner_services(service_type, is_active)'
+      )
+    : { data: null }
 
   const hours = partner
     ? resolvePartnerOpeningHours(partner.slug, partner.opening_hours, partner.timezone)
     : null
 
   const hasService =
-    utility.slug === 'transfers' ||
+    !utility.isPurchasable ||
     (partner?.partner_services ?? []).some(
-      (service) => service.service_type === utility.serviceType && service.is_active
+      (service) =>
+        utility.serviceType != null &&
+        service.service_type === utility.serviceType &&
+        service.is_active
     )
 
-  const purchasable = Boolean(getPurchasableTripHelpProduct(utility.slug) && partner && hasService)
+  const checkoutProduct = await getPurchasableTripHelpProduct(admin, utility.slug)
+  const purchasable = Boolean(checkoutProduct && partner && hasService && utility.isPurchasable)
 
-  const partnerAddress = partner
-    ? formatPartnerAddress(partner)
-    : 'Airlie Beach, QLD'
+  const partnerAddress = partner ? formatPartnerAddress(partner) : 'Airlie Beach, QLD'
 
   const directionsUrl = partner
     ? resolvePartnerDirectionsUrl({
@@ -103,7 +115,7 @@ export default async function UtilityDetailPage({
       partnerName={partner?.name ?? utility.partnerDisplayName}
       partnerAddress={partnerAddress}
       partnerHref={partnerHref}
-      isAvailable={Boolean(partner && hasService)}
+      isAvailable={Boolean(partner && (utility.isPurchasable ? hasService : true))}
       hoursSummary={hours?.summary}
       isOpen={hours?.isOpen}
       purchasable={purchasable}

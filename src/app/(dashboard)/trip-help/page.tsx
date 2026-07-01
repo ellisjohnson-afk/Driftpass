@@ -9,6 +9,7 @@ import { getTown } from '@/lib/towns'
 import { TripHelpMarketplace, TripHelpUtilityGrid, TripHelpTabs, EssentialsFaq } from '@/components/trip-help'
 import { FeaturedShoutoutsStrip } from '@/components/shoutouts'
 import { fetchActiveShoutouts } from '@/lib/shoutouts/fetch'
+import { fetchActiveTripHelpProducts } from '@/lib/trip-help/fetch-products'
 import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +37,20 @@ export default async function TripHelpPage() {
 
   const town = getTown('airlie-beach')
   const essentials = town?.essentials ?? []
+
+  let utilities: Awaited<ReturnType<typeof fetchActiveTripHelpProducts>> = []
+  let marketplaceItems: Awaited<ReturnType<typeof fetchActiveTripHelpProducts>> = []
+  try {
+    ;[utilities, marketplaceItems] = await Promise.all([
+      fetchActiveTripHelpProducts(admin, { section: 'utilities' }),
+      fetchActiveTripHelpProducts(admin, {
+        section: 'marketplace',
+        hubSlug: undefined,
+      }).then((items) => items.filter((item) => !item.hubSlug)),
+    ])
+  } catch {
+    // Migration 018 may not be applied yet
+  }
 
   let tripHelpShoutouts: Awaited<ReturnType<typeof fetchActiveShoutouts>> = []
   try {
@@ -72,8 +87,8 @@ export default async function TripHelpPage() {
         <TripHelpTabs
           utilities={
             <div className="space-y-8">
-              <TripHelpUtilityGrid />
-              <TripHelpMarketplace />
+              <TripHelpUtilityGrid utilities={utilities} />
+              <TripHelpMarketplace items={marketplaceItems} />
             </div>
           }
           essentials={<EssentialsFaq items={essentials} />}

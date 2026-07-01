@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils/cn'
-import type { TripUtilitySlug } from '@/lib/trip-help/constants'
 
 function LuggageIcon() {
   return (
@@ -60,7 +59,7 @@ function TransferIcon() {
   )
 }
 
-const UTILITY_ICONS: Record<TripUtilitySlug, () => ReactNode> = {
+const UTILITY_ICONS: Partial<Record<string, () => ReactNode>> = {
   'luggage-storage': LuggageIcon,
   showers: ShowerIcon,
   laundry: LaundryIcon,
@@ -69,13 +68,22 @@ const UTILITY_ICONS: Record<TripUtilitySlug, () => ReactNode> = {
   transfers: TransferIcon,
 }
 
-export function TripUtilityIcon({ slug, className }: { slug: TripUtilitySlug; className?: string }) {
-  const Icon = UTILITY_ICONS[slug]
+function DefaultUtilityIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-7 w-7" aria-hidden>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 8v4l3 2" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+export function TripUtilityIcon({ slug, className }: { slug: string; className?: string }) {
+  const Icon = UTILITY_ICONS[slug] ?? DefaultUtilityIcon
   return <span className={cn('text-drift-gold-mid', className)}><Icon /></span>
 }
 
 export interface UtilityTileProps {
-  slug: TripUtilitySlug
+  slug: string
   label: string
   href: string
   partnerName?: string

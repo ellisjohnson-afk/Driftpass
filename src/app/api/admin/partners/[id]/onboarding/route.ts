@@ -24,7 +24,7 @@ export async function GET(
     return NextResponse.json({ error: 'Partner not found' }, { status: 404 })
   }
 
-  const checklist = buildPartnerOnboardingChecklist({
+  const checklist = await buildPartnerOnboardingChecklist(auth.admin!, {
     slug: partner.slug,
     name: partner.name,
     address: partner.address,
